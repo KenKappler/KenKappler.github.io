@@ -1,0 +1,49 @@
+<html>
+<head>
+  <title>Rainbow Coin</title>
+ 
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+ 
+  <script type="text/javascript">
+ 
+  //change this contract address to the one you have created!
+  var contractAddress = "0x5811bca013560ecc798b394ea75f3ae986a544c0";
+  //Our coloured coins are stored in our public address prefixed by the numbers 0-6 as we have added multiples of 2**160 to them.
+  var Red_Address = eth.secretToAddress(eth.key);
+ 
+  function createTransaction() {
+    var receiverAddress = '0x' + document.querySelector("#receiverAddress").value;
+    var amount = document.querySelector("#amount").value;
+    var data = eth.pad(receiverAddress, 32) + eth.pad(amount, 32);
+    eth.transact({from: eth.key, value: 0, to: contractAddress, data: data, gas: 5000, gasPrice: 100000}, function() {})
+  }
+ 
+  eth.watch({altered: {at: eth.secretToAddress(eth.key), id: contractAddress}}).changed(function() {
+    document.getElementById("balance").innerText = eth.toDecimal(eth.stateAt(contractAddress, Red_Address));
+  });
+  </script>
+</head>
+ 
+<body>
+ 
+  <div class="header">
+    <h1 class="text-muted">My Token</h1>
+  </div>
+ 
+  <div class="jumbotron">
+    <h3>Balance: <strong id="balance"></strong></h3>
+    <br>
+ 
+    <div>
+      <div class="form-group">
+        <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+        <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+      </div>
+      <button class="btn btn-default" onclick="createTransaction();">Send some tokens!</button>
+    </div>
+  </div>
+ 
+</body>
+ 
+</html>
