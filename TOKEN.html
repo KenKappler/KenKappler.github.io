@@ -12,7 +12,7 @@
   //Our coloured coins are stored in our public address prefixed by the numbers 0-6 as we have added multiples of 2**160 to them.
   //var Red_Address = eth.secretToAddress(eth.key);
   web3.eth.accounts.then(function (accounts) {
-    document.getElementById("balance").innerText = accounts;
+    document.getElementById("balance").innerText = accounts[0];
   })
 
   //function createTransaction() {
