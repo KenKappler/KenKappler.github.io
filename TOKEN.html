@@ -8,23 +8,35 @@
   <script type="text/javascript">
  
   //change this contract address to the one you have created!
-  //var contractAddress = "0xfe8d5c113b5240d2950e69b64610beb1bafcce74";
+  var contractAddress = "0xfe8d5c113b5240d2950e69b64610beb1bafcce74";
   //Our coloured coins are stored in our public address prefixed by the numbers 0-6 as we have added multiples of 2**160 to them.
   //var Red_Address = eth.secretToAddress(eth.key);
-  web3.eth.accounts.then(function (accounts) {
-    document.getElementById("balance").innerText = accounts[0];
-  })
+  web3.eth.watch({altered: web3.eth.accounts}).changed(function() {
+    web3.eth.balanceAt(web3.eth.coinbase).then(function (balance) {
+      document.getElementById("ether").innerText = web3.toDecimal(balance);
+    });
+    web3.eth.coinbase.then(function (coinbase) {
+      document.getElementById("coinbase").innerText = coinbase;
+      x = coinbase;
+      web3.eth.watch({altered: {at: coinbase, id: contractAddress}}).changed(function() {
+        web3.eth.stateAt(contractAddress, x).then( function(value){
+          document.getElementById("balance").innerText = web3.toDecimal(value);
+        });
+      });
+    });
+  });
 
-  //function createTransaction() {
+//function createTransaction() {
 //    var receiverAddress = '0x' + document.querySelector("#receiverAddress").value;
 //    var amount = document.querySelector("#amount").value;
 //    var data = eth.pad(receiverAddress, 32) + eth.pad(amount, 32);
 //    eth.transact({from: eth.key, value: 0, to: contractAddress, data: data, gas: 5000, gasPrice: 100000}, function() {})
 //  }
 // 
-  //eth.watch({altered: {at: eth.secretToAddress(eth.key), id: contractAddress}}).changed(function() {
+//eth.watch({altered: {at: eth.secretToAddress(eth.key), id: contractAddress}}).changed(function() {
 //    document.getElementById("balance").innerText = eth.toDecimal(eth.stateAt(contractAddress, Red_Address));
 //  });
+
   </script>
 </head>
  
@@ -35,7 +47,10 @@
   </div>
  
   <div class="jumbotron">
+    <h3>Account: <strong id="coinbase"></strong></h3>
+    <h3>Ether: <strong id="ether"></strong>
     <h3>Balance: <strong id="balance"></strong></h3>
+
     <br>
  
     <div>

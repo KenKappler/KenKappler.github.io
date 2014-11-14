@@ -1,0 +1,36 @@
+Subtutorial
+
+Everything in Ethereum is handled in chunks of 32 bytes. The contract's storage is in key value pairs both of length 32 bytes and a transactions data is an array of values 32 bytes in length.
+
+This is actually a very large amount of space - you may find that you are frequently storing or sending information which uses far fewer than 32 bytes. Take the example below:
+
+We wish to store the following four words seperately in self.storage: "Monty", "Python's", "Flying", "Circus".
+
+We could do this:
+
+self.store[0] = "Monty"
+self.store[1] = "Python's"
+self.store[2] = "Flying"
+self.store[3] = "Circus"
+
+But this would cost us almost 1200 gas. Instead we are going to concatenate them by dividing our 32 byte space into 8byte (64 bit) chunks as below:
+
+concatenated = "Monty" * 2^192 + "Python's" * 2^128 + "Flying" * 2^64 + "Circus"
+
+self.store[0] = concatenated
+
+This takes far less gas and stores our four words like so:
+
+ASCII: NUL NUL NUL M o n t y P y t h o n ' s NUL F l y i n g NUL NUL C i r c u s
+
+HEX: 00 00 00 4d 6f 6e 74 79 50 79 74 68 6f 6e 27 73 00 46 6c 79 69 6e 67 00 00 43 69 72 63 75 73
+
+if we wish to recover our words we need to use the divisor and modulo function:
+
+wordOne = self.store[0] / 2^192 # Monty
+wordTwo = self.store[0] % 2^192 / 2^128 # Python's
+wordThree = self.store[0] % 2^128 / 2^64 # Flying
+wordFour = self.store[0] % 2^64 # Circus
+
+
+

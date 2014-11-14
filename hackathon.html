@@ -1,0 +1,108 @@
+<html>
+<head>
+  <title>Rainbow Coin</title>
+  <script src="jquery-1.11.1.min.js"></script>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+ 
+
+ <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+
+
+  <script type="text/javascript">
+  //change this contract address to the one you have created!
+  var contractAddress = "0x2626dfc832cbe7bfa55be44c962ffbcbc2de800c";
+  var Red_Address = web3.eth.accounts[0];
+  var Orange_Address = "0x1" + web3.eth.accounts[0].substr(2);
+  var Yellow_Address = "0x2" + web3.eth.accounts[0].substr(2);
+  var Green_Address = "0x3" + web3.eth.accounts[0].substr(2);
+  var Blue_Address = "0x4" + web3.eth.accounts[0].substr(2);
+  var Indigo_Address = "0x5" + web3.eth.accounts[0].substr(2);
+  var Violet_Address = "0x6" + web3.eth.accounts[0].substr(2);
+  
+  $(document).ready(function() {
+  var myAccounts = web3.eth.accounts;
+  for (i=0; i < myAccounts.length; i++){
+      $("#AccountDrop").append("<option value=" + i + ">"+myAccounts[i]+"</option>");
+  }
+  //Our coloured coins are stored in our public address prefixed by the numbers 0-6 as we have added multiples of 2**160 to them.
+
+  $('select[id="AccountDrop"]').change(function(){
+  //var Red_Address = web3.eth.accounts[$(this).value];
+    //alert($(this).val())
+    var Red_Address = web3.eth.accounts[$(this).val()];
+    document.getElementById("Red balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Red_Address));
+    document.getElementById("Orange balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Orange_Address));
+    document.getElementById("Yellow balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Yellow_Address));
+    document.getElementById("Green balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Green_Address));
+    document.getElementById("Blue balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Blue_Address));
+    document.getElementById("Indigo balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Indigo_Address));
+    document.getElementById("Violet balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Violet_Address));
+});
+})
+
+  //var web3 = web3.toAscii(web3.eth.accounts[1]);
+  function createTransaction() {
+    var receiverAddress = '0x' + document.querySelector("#receiverAddress").value;
+    var amount = document.querySelector("#amount").value;
+    var colour = document.querySelector("#colour").value;
+    var data = eth.pad(receiverAddress, 32) + eth.pad(amount, 32) + eth.pad(colour, 32);
+    eth.transact({from: eth.key, value: 0, to: contractAddress, data: data, gas: 5000, gasPrice: 100000}, function() {})
+  }
+ 
+  web3.eth.watch({altered: {at: web3.eth.accounts[0], id: contractAddress}}).changed(function() {
+    document.getElementById("Red balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Red_Address));
+    document.getElementById("Orange balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Orange_Address));
+    document.getElementById("Yellow balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Yellow_Address));
+    document.getElementById("Green balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Green_Address));
+    document.getElementById("Blue balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Blue_Address));
+    document.getElementById("Indigo balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Indigo_Address));
+    document.getElementById("Violet balance").innerText = web3.toDecimal(web3.eth.stateAt(contractAddress, Violet_Address));
+
+  });
+  </script>
+</head>
+ 
+<body>
+ 
+  <div class="header">
+    <h1 class="text-muted">Rainbow Coin</h1>
+  </div>
+ 
+  <div class="jumbotron">
+    <h3>Red Balance: <strong id="Red balance"></strong></h3>
+    <h3>Orange Balance: <strong id="Orange balance"></strong></h3>
+    <h3>Yellow Balance: <strong id="Yellow balance"></strong></h3>
+    <h3>Green Balance: <strong id="Green balance"></strong></h3>
+    <h3>Blue Balance: <strong id="Blue balance"></strong></h3>
+    <h3>Indigo Balance: <strong id="Indigo balance"></strong></h3>
+    <h3>Violet Balance: <strong id="Violet balance"></strong></h3>
+    <h3>Test: <strong id="Test"></strong></h3>
+    <br>
+ 
+    <div>
+      <div class="form-group">
+        <select id="AccountDrop" class="combobox form-control">
+              <option value="" selected="selected">Select your address</option>
+        </select><br>
+
+        <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+        <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+        <select id="colour" class="combobox form-control" name="Colour">
+              <option value="" selected="selected">Select a Colour</option>
+              <option value="0">Red</option>
+              <option value="1">Orange</option>
+              <option value="2">Yellow</option>
+              <option value="3">Green</option>
+              <option value="4">Blue</option>
+              <option value="5">Indigo</option>
+              <option value="6">Violet</option>
+        </select>
+      </div>
+      <button class="btn btn-default" onclick="createTransaction();">Send some tokens!</button>
+    </div>
+  </div>
+ 
+</body>
+ 
+</html>
