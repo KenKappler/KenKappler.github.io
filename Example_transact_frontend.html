@@ -1,0 +1,55 @@
+<html>
+<head>
+  <title>Transact example</title>
+
+<script type="text/javascript">
+
+    //irrelevant as this is just an example of transact function - could be sent to anyone.
+    var address = "0x362f32678116879bd2a62efc543a8b41d02d2f28";
+
+    // describes the contract as having a single function with two input parameters, both unsigned integers 256
+    var desc =  [{
+        "name": "Send",
+        "inputs": [
+        {
+            "name": "to",
+            "type": "uint256"
+        },
+        {
+            "name": "value",
+            "type": "uint256"
+        }
+        ]
+      }];
+    //Builds the contract using our desc and nonsense address.
+    var contract = web3.contract(address, desc);
+    //function to send transaction using parameters from the HTML input boxes
+    function createTransaction() {
+      receiverAddress =  document.querySelector('#receiverAddress').value;
+      console.log(receiverAddress);
+      amount = document.querySelector('#amount').value;
+      console.log(amount);
+      contract.Send(receiverAddress, amount).transact()
+    }
+
+</script>
+
+</head>
+
+<body>
+
+  <div>
+    <h3>Transact Example</h3>
+  </div>
+      <div>
+        <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+        <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+      </div>
+        <button onclick="createTransaction();">Send transaction</button>
+      </div>
+  <div>
+  Typical transaction for a coin contract. If you put a value in either of the input boxes larger than 0x1fffffffffffff it will start to round down the values passed to it from the input boxes (try sending an address for example).
+  </div>
+</body>
+
+</html>
