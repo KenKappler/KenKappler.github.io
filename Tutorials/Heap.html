@@ -6,31 +6,21 @@
 	<a href="../index.html">Back to Contents</a>
 </head>
 <body>
-	This tutorial will be focused on a very important and useful data structure known as a heap. We will take a look at the data structure, how it fits within the contract.storage, and what it's use case is. Finally we will write a very quick heap snippet and integrate it into our subcurrency contract.
-
-Looking at the past three tutorials you can see that we have made good and efficient use of the contract.storage in both our crowdfunding dapp and our Rainbow-coin dapp. However the two approaches used to store the information have limited uses and we must define other ways for a contract to arrange data in its storage.
-
-The first example rainbowcoin was a relational database model. Using given values of receipient, deliveror and coin our contract could calculate the key where onformation on current balances were held and use that to alter balances of our accounts.
-
-The second example crowdfund used an example of a lifo database. Using a given ID variable we could locate a list, return the length of that list and push new information to the end of that list (new contributors).
-
-
-Both these storage techniques are efficient but have limitations. The most pressing of these is the ability of the contract to comprehend and modify all the information in its storage.
-
-Many of you may be used to using python or other high level languages which have a great deal of advanced functionality built in for dealing with dictionaries such as contract.storage. Things like list comprehension and iteration (below) are actually generator routines which instruct python to create an array of the keys of a given dictionary.
-
-	d = {'0x56af667': 1000, '0x768dd9': 2000, '0x4567912af': 3000} 
-	for key in d:
-    	print key, 'corresponds to', d[key] 
-
-Such operations are too computationally expensive for the EVM and would require too much gas to implement which is why they are not included in serpent.
-
-With this in mind we can see that there is no (efficient) way for our first contract to determine all of the values in its contract without the keys being provided by a transaction - it cannot look through it's storage and produce a list of all it's data.
-
-Likewise our second contract can only locate a crowdfund campaign in its storage given an id. Once it locates that campaign it can add new contributors (and feasibly remove the latest one with a minor code change) but it is not fully able to amend the list as we might like - and it is also reliant on an 'id' being passed from a transaction to locate a campaign.
-
-What we really need is a data structure which allows the contract to add,remove,sort, and sequentially access the data held in it efficiently.
-
-*PRIORITY QUEUE**
+	<div>
+		<p>This tutorial will be focused on a very important and useful data structure known as a heap. We will take a look at the data structure, how it fits within the contract.storage, and what it's use case is. Finally we will write a very quick heap snippet and integrate it into our subcurrency contract.</p>
+		<p>Looking at the past three tutorials you can see that we have made good and efficient use of the contract.storage in both our crowdfunding dapp and our Rainbow-coin dapp. However the two approaches used to store the information have limited uses and we must define other ways for a contract to arrange data in its storage.</p>
+		<p>The first example rainbowcoin was a relational database model. Using given values of receipient, deliveror and coin our contract could calculate the key where onformation on current balances were held and use that to alter balances of our accounts.</p>
+		<p>The second example crowdfund used an example of a lifo database. Using a given ID variable we could locate a list, return the length of that list and push new information to the end of that list (new contributors).</p>
+		<p>Both these storage techniques are efficient but have limitations. The most pressing of these is the ability of the contract to comprehend and modify all the information in its storage.</p>
+		<p>Many of you may be used to using python or other high level languages which have a great deal of advanced functionality built in for dealing with dictionaries such as contract.storage. Things like list comprehension and iteration (below) are actually generator routines which instruct python to create an array of the keys of a given dictionary.</p>
+		<p>d = {'0x56af667': 1000, '0x768dd9': 2000, '0x4567912af': 3000}</p>
+		<p>for key in d:</p>
+		<p>print key, 'corresponds to', d[key]</p>
+		<p>Such operations are too computationally expensive for the EVM and would require too much gas to implement which is why they are not included in serpent.</p>
+		<p>With this in mind we can see that there is no (efficient) way for our first contract to determine all of the values in its contract without the keys being provided by a transaction - it cannot look through it's storage and produce a list of all it's data.</p>
+		<p>Likewise our second contract can only locate a crowdfund campaign in its storage given an id. Once it locates that campaign it can add new contributors (and feasibly remove the latest one with a minor code change) but it is not fully able to amend the list as we might like - and it is also reliant on an 'id' being passed from a transaction to locate a campaign.</p>
+		<p>What we really need is a data structure which allows the contract to add,remove,sort, and sequentially access the data held in it efficiently.</p>
+		<p>*PRIORITY QUEUE**</p>
+	</div>
 </body>
 </html>
