@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Your first Dapp</title>
+	<a href="index.html">Back to Contents</a>
+</head>
+<body>
+
+<div>
+	<p>The below Tutorial has been rewritten to reflect the changes in POC 7 and is the first in a series to be released that will get the community up to speed with development on the Ethereum platform.</p>
+</div>
+<div>
+	<p><h1>Introduction</h1></p>
+</div>
+<div>
+	<p>This tutorial is the result of many days of studying best practices on how to leverage what's available on Ethereum now, and making the technology available to users today, several months away from the network go live date (March 2015).For this reason, keep in mind development practices are likely to change heavily throughout the next few months, and the below is in no way indicative of what you should expect from the finished product. I have also kept a very narrow focus and omitted much information.</p>
+</div>
+<div>
+	<p>And now, onwards to a decentralized web! Please join us on IRC if you have questions!</p>
+</div>
+<div>
+	<p>The basics</p>
+</div>
+<div>
+	<p>Ethereum enables the decentralized web, referred to as 'web 3'. What makes it different from web 2 is that on Ethereum, there are no webservers, and therefore no middlemen to take commissions, steal your data or offer it to the NSA, and of course nothing to DDoS.</p>
+</div>
+<div>
+	<p>A dapp ('decentralized app') consists of two parts: a frontend, written in HTML or QML, and a backend (think of it as the 'database' for your frontend).</p>
+</div>
+<div>
+	<p>Good news: if you like bootstrap, or any other framework, you can continue using them, as the frontend of dapps have full network access, and CDNs are accessible. In fact, for all intent and purposes, developing a frontend for a dapp written HTML is the exact same as developing a website, and converting from web 2 to web 3 is in many cases trivial.</p>
+</div>
+<div>
+	<p>Even better news: you get reactive programming baked in (which should please angular, meteor and derby fans), by simply using callback functions, and there's no new framework to learn.</p>
+</div>
+<div>
+	<p>Even even better news: because Ethereum relies on cryptographic principles to function, every dapp knows the pseudonymous identity of each user. That's right, users won't need to 'create accounts' or 'log on' to access your dapps, and you can think of this as openID by default, everywhere.</p>
+</div>
+<div>
+	<p>There is no bad news, except maybe for the bad actors from the web 2 world, such as dishonest exchanges running with the money or gambling sites falsifying random number information to make a quick buck. On Ethereum, the backend operations are validated by all nodes on the network, meaning that a backend will always will do what its code says it does. This is why you might have heard people call Ethereum 'trustless' - there's no need for users to trust into a central authority to 'do the right thing'.</p>
+</div>
+<div>
+	<p>This tutorial will focus on your first steps using AlethZero (our development client), and the creation of a simple coin contract - the backend of your dapp.</p>
+</div>
+<div>
+	<p>Installing the client</p>
+</div>
+<div>
+	<p>Important Note: The client is in a constant state of flux, and the development version which you will be using is updated almost every day. If you are having trouble getting things to work, please use the version of the client distributed with our <link>Linux Virtual Machine's</link>. This tutorial has been tested to work with this version.</p>
+</div>
+<div>
+	<p>We'll be using AlethZero, the C++ implementation of Ethereum designed for developers. In particular, we're going to install the 'development' version, which contains all the latest goodies.</p>
+</div>
+<div>
+	<p>OS X users: <link>please follow this guide</link>. You can stop following the tutorial after you executed the brew linkapps command, then come back here.</p>
+</div>
+<div>
+	<p>Ubuntu users: <link>please follow this guide.<link> While a bit less user-friendly to install than its OS X counterpart, AlethZero is developed on ubuntu and therefore works very well on this platform.</p>
+</div>
+<div>
+	<p>Windows users: while it is possible to build AlethZero on Windows, at this point in time it is far too complex considering the beginner scope of this tutorial. Instead, if you do not have access to an OS X or linux computer, download a copy of vmware workstation (free on a 30 day trial) and download the Virtual Machine we are distributing via torrent which contains a working build of the client.</p>
+</div>
+<div>
+	<p>A quick overview of AlethZero</p>
+</div>
+<div>
+	<p>If all went well, you should see something like this after you start AlethZero, depending on your platform and screen resolution:</p>
+</div>
+
+  <img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/xm/y7kr1hjsygqa.png" alt="" />
+<div>
+	<p>If your resolution varies, and not all the interface is visible, manually close all panes in the display by clicking their 'x' symbols until they are all gone, resize the screen to fit your resolution and re-add them manually by right clicking just below the titlebar (and just to the right of the 'refresh' button).</p>
+</div>
+<div>
+	<p>What's going on here? At the center of the screen is a browser window, a Webkit view to be exact. You can browse the existing web from there, just like any other browser, try google for example.</p>
+</div>
+<div>
+	<p>The rest of the panels contain debug and technical information that we'll make use of a bit later. While useful for developers, this is not a very-user friendly interface, so the final Ethereum browser, tentatively called 'Mist' and build on top of the Go Ethereum implementation, will have a completely different look and feel. In fact, it's likely that once Ethereum is launched, the etherbrowser will look a bit like this:</p>
+</div>
+
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/cc/1mxcdyrnqslh.png" alt="" />
+
+
+<div>
+	<p>The above is a concept of a potential look and feel for the etherbrowser "Mist" being developed by our Amsterdam team, accessing a dapp that itself acts as a dapp store.</p>
+</div>
+<div>
+	<p>As far as options are concerned, feel free to reorganize your screen a bit. You can also drag and drop panels on top of each other to 'stack' them.</p>
+</div>
+<div>
+	<p>Choices, choices</p>
+</div>
+<div>
+	<p>Ethereum is a generalised programming platform. You can build games, financial applications, gambling apps, insurance companies, social networks, well, anything really! That said, it's always good to keep in mind your users' needs first and foremost, so what do you think they are missing from the centralized web? Well, trust of course!</p>
+</div>
+<div>
+	<p>So, for today's tutorial we'll write a simple contract that functions a bit like a bank, but with a transparent ledger that the whole world can audit. We'll issue 10,000 tokens, and because it wouldn't be much fun to keep all the tokens for ourselves, we'll also create a method that allows us to send them to our friends.</p>
+</div>
+<div>
+	<p>This way, we are issuing our own money (in a very basic way, but still). In the web 2 world it would be similarly trivial to build such an app in PHP and MySql, but your users would have to trust you with being an honest accountant, that your ledger stay consistent, that the government wouldn't 'help' itself with some tokens, that hackers wouldn't break into your server, that your employees would be honest at all times and hadn't planted a backdoor, or that your programmers wouldn't have made a single mistake, ever... well, you get the point.</p>
+</div>
+<div>
+	<p>Our Contract</p>
+</div>
+<div>
+	<p>Our backend (referred to as a 'contract' in Ethereum) is going to use a language very similar to Python, amusingly called Serpent. There are several other contract languages you can use when building Ethereum backends, LLL (similar to Lisp) and Solidity (similar to C++). We'll use Serpent because it's easy and has many examples available to learn more from.</p>
+</div>
+<div>
+	<p>As we mentioned above, we're building a little bank, so we'll need to do two things:</p>
+</div>
+<div>
+	<p>1) Instantiate at least one account with a balance of tokens, to get things rolling when the contract is first created.</p>
+</div>
+<div>
+	<p>2) Build a 'send' function similar to contract.send(account, amount) in order to move tokens around.</p>
+</div>
+<div>
+	<p>Let's dive in, and feel free to open your favorite text editor to edit your first contract!</p>
+</div>
+
+<pre class="CodeBlock"><code>def init():
+	self.storage[msg.sender] = 10000
+def code():
+	to = msg.data[0]
+	from = msg.sender
+	value = msg.data[1]
+	if self.storage[from] >= value:
+		self.storage[from] = self.storage[from]  - value
+		self.storage[to] = self.storage[to] + value</code></pre>
+	<div>
+		<p>Don't panic, it's much simpler than it looks. Contracts are divided into methods. The first method, entitled init, is a special method that defines the initial state of the contracts data storage. That initialisation code is run only once when the contract is created, and never again.</p>
+	</div>
+	<div>
+		<p>The second part of the contract is the contract code itself, the stuff that will live forever on the Ethereum network, immutable, and backed by millions of nodes insuring it returns the expected results every time. In our case, it's a simple function that checks that the sender has a large enough balance and, if so, transfers the tokens from one account to the other.</p>
+	</div>
+
+Let's look at this in a bit more detail:
+
+<pre class="CodeBlock"><code>def init():
+	self.storage[msg.sender] = 10000</code></pre>
+
+<div>
+	<p>This is the initialization of our contract: it will only run once (because it's within the init method), and it is doing a couple of things; Firstly, it uses msg.sender to lookup the public address of the transaction sender (you in this case). Secondly, it is accessing our contracts storage using self.storage and assigning a value of 10,000 to the storage slot using msg.sender as the key. Contracts store data as a key value pair both 32 bytes in length.</p>
+</div>
+<div>
+	<p>Msg.sender is a 160bit number denoting your public key. This is a unique identifier on the network that cannot be forged, thanks to the cryptographic laws that Ethereum implements 'under the hood'. There are other things that contracts can 'trust' about the transactions they receive and the blocks in the chain - which we will explore in other tutorials.</p>
+</div>
+<div>
+	<p>Now we have assigned ourselves an initial balance, let's have a look at the 'send' function, which will be executed each time we call the contract from now on. Note that because our contract in this particular case has only one function, we didn't bother naming the function send, it's assumed that every call to the contract will involve sending tokens.</p>
+</div>
+
+<pre class="CodeBlock"><code>def code():
+	to = msg.data[0]
+	from = msg.sender
+	value = msg.data[1]
+	if self.storage[from] >= value:
+		self.storage[from] = self.storage[from]  - value
+		self.storage[to] = self.storage[to] + value</code></pre>
+	
+<div>
+	<p>The first three lines are variable definitions: you probably noticed that this time the value of msg.sender is assigned to the variable from, which makes sense as the account calling the contract is the one that is sending tokens.</p>
+</div>
+<div>
+	<p>The value msg.data[0] is assigned to the variable to and is another 160 bit public address. If you've ever written 'batch' programs, and you have a hunch this refers to the first argument that is sent to that contract, you'd be right. msg.data[0] represents the first argument sent to the contract, a bit like a the first parameter to a function call. Msg.data[1], as you probably guessed correctly, refers to the second argument and is the number of tokens you wish to send.</p>
+</div>
+<div>
+	<p>So these are the three arguments passed to our function 'code' in order to transfer tokens from one storage address to another.</p>
+</div>
+<div>
+	<p>To send tokens, we first check that the value stored in self.storage[from] is higher or equal to the amount they are sending. This makes sense, you wouldn't want to send tokens that don't exist would you :) This is of course handled by the if statement: if self.storage[from] >= value:</p>
+</div>
+<div>
+	<p>If the balance checks out, the conditional will evaluate to true and we subtract the amount being sent from the sender balance: self.storage[from] = self.storage[from]  - value, then add to the balance of the account receiving the tokens: self.storage[to] = self.storage[to] + value</p>
+</div>
+<div>
+	<p>So now we have a function which will send tokens from the control of one account to another.</p>
+</div>
+<div>
+	<p>**Don't run out of gas!**</p>
+</div>
+<div>
+	<p>Before we go further, there is an important concept you need to understand that will help you master ethereum contracts: gas.</p>
+</div>
+<div>
+	<p>Let's peek under the covers: in order to power the decentralized web, Ethereum cannot possibly rely on any centralized authority (because that authority could manipulate the database). Instead, every node that participates on the network hold a copy of a decentralized database, which they audit.</p>
+</div>
+<div>
+	<p>The network nodes process the code that is being executed in the database and come into agreement as to what the correct state of the database is through a vote. Majority always win the vote, and nodes are incentivized to do this verification work. Voting takes place at regular particular intervals, on average every 12.7 seconds.</p>
+</div>
+<div>
+	<p>The contract we have written earlier will be stored in this database. Contracts are triggered and executed when they are called by users or other contracts.</p>
+</div>
+<div>
+	<p>If you're thinking that this necessary approach presents limits in terms of processing speed, you'd be correct. The total processing power of the Ethereum network, regardless of the number of nodes that forms it, is equal to a single smartphone from 1999. This means that you're not going to want to store megabytes of data on the Ethereum network, or render 3d graphics. There are of course workarounds to this, including our upcoming storage solution called Swarm and our secure messaging protocol, Whisper, both companion technologies to Ethereum.</p>
+</div>
+<div>
+	<p>It also means that because computing power is limited, it has to be measured carefully so that no single actor can commit evil deeds such as running infinite loops on all the world's Ethereum nodes. This unit of measure is called 'gas'.</p>
+</div>
+<div>
+	<p>Gas comes into play when you try to make a contract do something. You 'call' a function of the contract, which then executes that function. It could be validating an escrow, or 'like' a friend on a decentralized social app, or transfer an amount of contract-specific token to another user, etc. Anything.</p>
+</div>
+<div>
+	<p>In order to execute this function, the contract will need gas, just like your car does. So, as part of the function call, you specify how much 'gas' you want to send to the contract, and how much you're willing to pay for that gas (priced in ether, Ethereum's fuel and unit of account).</p>
+</div>
+<div>
+	<p>The different operations a contract can support are priced differently. One execution cycle cost one gas for example. Others, like writing to storage, cost considerably more (because storage is a very scarce resource).</p>
+</div>
+<div>
+	<p>If you send too much gas to the contract, and it doesn't use all of it, it is refunded to you. If you send too little, the contract stops and rolls back (just like your car when it's 'out of gas').</p>
+</div>
+<div>
+	<p>How gas is priced depends on the global consensus of the community. It's therefore likely operations that have the best priced gas will be executed first on the network, and the rest a bit later.</p>
+</div>
+<div>
+	<p>****</p>
+</div>
+<div>
+	<p>Uploading your contract.</p>
+</div>
+<div>
+	<p>Now that you understand Ethereum's basic principles, and that you have your first contract written up, it's time to save it on the Ethereum network.</p>
+</div>
+<div>
+	<p>Open up your Alethzero client if you havent already done so, and familiarise yourself with the interface. For the purpose of this tutorial you should not connect to the Testnet; Instead, select 'Use private chain' from the debug menu and create your very own private chain. This way you are not reliant on the testnet being online while you develop your dapps.</p>
+</div>
+<div>
+	<p>Locate the transact pane. This is where you will input your contract code and send transactions, it consists of an address to send transactions to, options for gas and gasPrice, and a pane for inputing contract code or transaction data.</p>
+</div>
+<div>
+	<p>As mentioned previously, saving this contract or operating it will require ether, which at the moment we have 0 units of. In order to acquire a bit of ether, you need to participate in the voting process which guarantees the integrity of the decentralized database, a process referred to as 'mining'.</p>
+</div>
+<div>
+	<p>You are not connected to the network in this case as you are running a private chain, so only you can mine for new blocks. Click on 'Mine' in the toolbar - then go to Debug and select 'Force Mining'. You should start seeing various tabs come alive with information. The mining tab has a visual representation of the mining of a block - when a succesful block is found it is marked by a red spike and your balance should increase. An interesting tab to have a look during this process is the 'Blockchain' one - each vote is recorded here and tagged with a number. We'll get back to this shortly.</p>
+</div>
+<div>
+	<p>Once you are the proud holder of say 15000 Finneys, you can stop mining. Click 'mine' again to stop the process. Now let's save our contract.</p>
+</div>
+<div>
+	<p>In the transact pane paste the Serpent code we wrote earlier within the 'Data' textarea. It should look a bit like this:</p>
+</div>
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/ww/weaohdus0tc5.png" alt="" />
+
+
+<div>
+	<p>Since we are trying to create a contract and not send ether to another account, you can safely leave all the fields to their default value. We'll be sending 10,000 gas to the contract priced at 10 Szabo each. A Szabo is a another unit of value, equivalent to 0.000001 ether. Since our contract creation code is so simple, we'll be refunded of the majority of this ether as the saving of the contract will not consume all the gas.</p>
+</div>
+<div>
+	<p>Note that Serpent, exactly like Python, is tab-sensitive. If you have used the wrong tabulation, even by just one character or space, the code will not compile. Check carefully, and if you have pasted the contract correctly, you should two messages in the pane just under your contract code. The first one is a message stating there was an LLL parse error, something you can safely dismiss (you wrote your contract in the Serpent language, not the LLL language, so this is normal). Second, a series of assembly-like instructions similar to 'PUSH2 0x27 0x10 CALLER...'. This is your contract code, in its compiled form.</p>
+</div>
+<div>
+	<p>Now that your contract is compiled, you just have to press the 'Execute' to save your contract in the decentralized database.</p>
+</div>
+<div>
+	<p>Since you're not mining, it's likely your contract creation will be 'pending'. Make sure you have the 'Pending' pane opened and you will see something like this:</p>
+</div>
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/bh/bgp3p2tluvwz.png" alt="" />
+
+
+<div>
+	<p>After pressing 'Execute' in the transact pane make a note of the 'creates' field for that particular transaction in the 'pending' pane, in this particular case, 'e1c8eea232d52995bd2202c12d42a28db80b2c44' (it will be different for you, as each contract created has a unique ID).</p>
+</div>
+<div>
+	<p>Now that you have a pending contract you will need to commit this to the blockchain by mining a block (On the real network anyone else mining will receive this transaction and attempt to mine a succesful block). Click mine and wait for the transaction to disappear from the pending pane and for a new entry to appear in the contract pane. Turn off mining and click into your new contract in the contract pane. You should see something like the below:</p>
+</div>
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/48/u8tent7v1ort.png" alt="" />
+
+
+<div>
+	<p>You can see the entry in your contracts data storage from your initial setup showing a key value pair of your address and the number '10,000'. Everything looks good so we can assume that at the very least our 'init' function has been run correctly. Now we wish to test if we can send our tokens to another public key; In order to run our function 'code' we need to send a transaction to the contracts address with a 'to' address and a 'value' in the transactions data array. Locate the transact pane and paste the contracts address into the 'Address' box:</p>
+</div>
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/1y/rqvl9srprk5u.png" alt="" />
+
+
+<div>
+	<p>Now in the area where we previously input our code we are going to put a to address and a value on seperate lines. Use 0x5cefa6b00f0b60d10ce3ba015bdbd2892bd9cb9c (my public address on the testnet :p) and any value lower than 10,000. Click Execute and you should once again see a transaction pending, hit 'mine' until you've generated a new block and then stop mining. Your contract should now look something like this:</p>
+</div>
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/vb/bz6hiiyi15ac.png" alt="" />
+
+
+<div>
+	<p>Finally</p>
+</div>
+<div>
+	<p>And that is it - you have created your first contract! If you're comfortable with what we have covered here - why dont you try and add the contract to the test network. Send me some tokens using '0x5cefa6b00f0b60d10ce3ba015bdbd2892bd9cb9c' and ping me on twitter @kapplerken to let me know your contract address so I can send some back!</p>
+</div>
+
+	
+</body>
+</html>

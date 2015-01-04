@@ -2,7 +2,7 @@ Thing's contract's kind of know
 
 Contracts live on the block chain - it is their home. You can send them information from the oustide world and they will interact with it but to a contract this information is not trustworthy.
 
-Fortunately the consensus mechanism provided by the ethereum blockchain provides contracts with information that they can trust.
+Fortunately the consensus mechanism provided by the ethereum blockchain provides contracts with some information that they can trust.
 
 The following
 
