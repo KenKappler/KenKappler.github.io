@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Javascript API part 1</title>
+	<a href="../index.html">Back to Contents</a>
+</head>
+<body>
+	<b class="Bold">Javascript API</b>
+
+We are going to take a quick look at some of the bindings in the Javascript API and how they can be used to build powerful front ends for your dapps.
+
+To start with it's important to understand that all of our functions are asynchronous and return promises. This avoids problems that arise when synchronous javascript functions block the running of other code and hold up the other functions that. If you are not familiar with promises I advise you to take a moment to read up on their use before proceeding as they can be quite confusing for the novice user.
+
+For those of you who are comfortable with promises, lets dive in. We are going to be using the below html/javascript template and we will add new javascripts function while explaining what they do. We will not be using any custom libraries and our only aesthetic choice will be to use bootstrap to make things look nice.
+
+<code><html>
+<head>
+  <title>JavaScript API</title>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+  
+<script type="text/javascript">
+///First web3.eth.watch code to monitor coinbase
+  
+
+///Insert your contract address var here:
+ 
+
+///Second web3.eth.watch code to monitor block number
+  
+
+</script>
+
+</head>
+
+<body>
+
+  <div class="header">
+    <h3>JavaScript API</h3>
+  </div>
+
+  <div class="jumbotron">
+    <h5>Coinbase Address: <strong id="coinbase"></strong></h5>
+    <h5>Balance: <strong id="balance"></strong></h5>
+    <h5>Latest Block Number: <strong id="latestBlock"></strong></h5>
+    <h5>Latest Block Timestamp: <strong id="latestBlockTimestamp"></strong></h5>
+    <h5>Latest Block Hash: <strong id="latestBlockHash"></strong></h5>
+    <h5>Contract String: <strong id="contractString"></strong></h5>
+    <h5>Favourite Python: <strong id="favouritePython"></strong></h5>
+    <br>
+  </div>
+
+</body>
+
+</html></code>
+
+
+Take the above and paste it into  your preferred text editor and save it as a html file somewhere convenient. Now open Alethzero and use the browser to navigate to it. You should see the below:
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/43/7ky0hvi4lfk2.png" alt="" />
+
+We have listed several pieces of information; Coinbase Address, Balance, Latest Block Number, etc.. - currently they are all blank, and we will use our javascript bindings to pull the information from the browser and pass them to the web page.
+
+Switch back to the text editor - we have used bootstrap to make things look nice - but apart from this aesthetic choice everything should be pretty familiar to anyone who has created a html page before. take a look at lines ? - ? here I have created a skeleton for you to add the javascript bindings which interact with the browser. 
+
+All of our bindings use the web3 object, and we will mostly be using the web3.eth object today. Others such as the whisper protocol web3.shh and the future swarm protocol will be covered later. A full list of available javascript bindings can be found on our github wiki page - https://github.com/ethereum/wiki/wiki/JavaScript-API.
+
+The first binding you will need to use is web3.eth.watch. This object monitors the state of the blockchain and allows you to specify what triggers its function using filters. In this case we wish to keep an eye on our coinbase account so we will add the filter ({altered: web3.eth.coinbase}). This watch object is important because there is nothing static about the blockchain, it will be rare that you will not wish to have the webpage update whenever the state of the blockchain changes - ie: a new block is mined.
+
+take the below and copy it into your html - then save your file and reload the AZ web browser.
+
+<pre class="CodeBlock"><code>web3.eth.watch({altered: web3.eth.coinbase}).changed(function(){
+	///Your code goes here.
+});</code></pre>
+
+This watch function is continuously checking for changes in web3.eth.coinbase and executing its function whenever it sees changes occur. Currently it has no code to execute - lets rectify this by adding:
+
+<pre class="CodeBlock"><code>web3.eth.watch({altered: web3.eth.coinbase}).changed(function(){
+	web3.eth.coinbase.then(function(result) {
+	document.getElementById('coinbase').innerText = result;
+	});
+});</code></pre>
+
+We have added an asynchronous function to retrieve our coinbase account from the client(the account that we use to mine blocks and send transaction). Once the promise has been fulfilled and it has returned the 'result' (our coinbase address) we can modify our web page to display our coinbase account number. This is pretty cool, but not particularly interesting as our coinbase account doesnt really change that much - lets use another binding - web3.eth.balanceAt. This Asynchronous function returns the balance in ether at a particular address. We will use it to display our balance at our coinbase address.
+
+<pre class="CodeBlock"><code>web3.eth.watch({altered: web3.eth.coinbase}).changed(function(){
+  	web3.eth.coinbase.then(function(result) {
+  		document.getElementById('coinbase').innerText = result;
+  	});
+  	web3.eth.balanceAt(web3.eth.coinbase).then(function(result){
+    	document.getElementById('balance').innerText = result;
+    });
+});</code></pre>
+
+Take a look at the web page in the browser - if you have anything higher than a zero balance you will likely see some thing like this '0x678'. This is because the browser returns the account balance as a hexadecimal value - dont worry we have a built in function web3.toDecimal to convert it to a decimal:
+
+<pre class="CodeBlock"><code>document.getElementById('balance').innerText = web3.toDecimal(result);</code></pre>
+
+Now your webpage should look more like this:
+
+<img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/b5/k1achkmio228.png" alt="" />
+
+Because we have placed both our functions inside our web3.eth.watch function whenever the coinbase object changes, the code is executed again and our web page will be updated. Try mining some more ether and watch it update.
+
+We can use .watch to monitor the blockchain, and a variety of filters to change what triggers the execution of our code. Below we have omitted the filter and simply used web3.eth.watch() without any parameters to update the webpage whenever the state changes:
+
+<pre class="CodeBlock"><code>web3.eth.watch().changed(function(){
+	///Your code goes here.
+});</code></pre>
+
+We are going to use this watch object to monitor the blockchain and update our web page with information on the latest block. when fulfilled, Web3.eth.block returns a JSON object with several parameters containing all the relevant information regarding the block. We are going to take two of the most useful 'hash' and 'timestamp' which give you the time of the latest block mined and the hash of the block:
+
+<pre class="CodeBlock"><code>web3.eth.watch().changed(function(){
+	web3.eth.block(web3.eth.number).then(function(result){
+    	document.getElementById('latestBlock').innerText = web3.eth.number._result;
+    	document.getElementById('latestBlockHash').innerText = result.hash;
+    	document.getElementById('latestBlockTimestamp').innerText = Date(result.timestamp);
+  	})
+});</code></pre>
+
+Execute when the 'block' promise is fulfilled are three lines of code. The first takes the number of the block and inserts it into the webpage. The second and third pull parameters from the JSON object 'result' and modify the webpage with them (we also use the Object method Date() to convert the timestamp from UTC to human readable date). Reload your webpage and mine a few more blocks - you should see the values update in real time.
+
+Finally we are going to use the API for a very useful purpose, to pull information from our contracts data storage. For this purpose we are going to make things simple and create a contract initialised with data in it's storage:
+
+<pre class="CodeBlock"><code>def init():
+	self.storage[0] = 'Hello'
+	self.storage[1] = 'World'
+	self.storage[2] = 'Cleese'
+	self.storage[3] = 'Chapman'
+	self.storage[4] = 'Idle'
+	self.storage[5] = 'Palin'
+	self.storage[6] = 'Gilliam'
+	self.storage[8] = 'Jones'</code></pre>
+
+Copy the above into the transact pane and send it to the blockchain in a transaction - just like you have done in previous . While it is in the pending pane grab the contracts address as you will need ot add it to your javascript like so:
+
+<pre class="CodeBlock"><code>var contractAddress = "0x52ae0988e11527678c3a75f89e487efffb101a6d";</code></pre>
+
+We are going to use this and the function web3.eth.storageAt() to retreive our contracts data storage. Rather than create another watch object we can simply make an addition to the second watch which is monitoring the current block number, knowing as we do that the contracts storage cannot change without a new block being created.
+
+<pre class="CodeBlock"><code>web3.eth.watch({altered: web3.eth.number}).changed(function(){
+	web3.eth.block(web3.eth.number).then(function(result){
+    	document.getElementById('latestBlock').innerText = web3.eth.number._result;
+    	document.getElementById('latestBlockHash').innerText = result.hash;
+    	document.getElementById('latestBlockTimestamp').innerText = Date(result.timestamp);
+  	})
+  	web3.eth.storageAt(contractAddress).then(function(result) {
+    	///your code here
+  	});
+});</code></pre>
+
+You should be pretty comfortable with how this works by now, we have created a promise which returns a JSON object when the promise is fulfilled. Previously we have dealt with promises which return either a single value, or a JSON object which has the same properties (hash, timestamp, etc...) each time. This time is a little different - here the JSON object is a list of key values which can be different for every contract - you cannot rely on knowing the parameters before writing your javascript. I'm not going to go into how you should use javascript to handle JSON objects like this, suffice to say that there is plenty of information on this available on the internet. In this example we are simply going to take the JSON object returned by the promise and stringify it:
+
+<pre class="CodeBlock"><code>...
+web3.eth.storageAt(contractAddress).then(function(result) {
+    document.getElementById('contractString').innerText = JSON.stringify(result);  
+  });
+...</code></pre>
+
+This should output to your front end:
+
+Contract String: {"0x":"0x48656c6c6f","0x01":"0x576f726c64","0x02":"0x47696c6c69616d","0x03":"0x436c65657365","0x04":"0x49646c65","0x05":"0x50616c696e","0x06":"0x436861706d616e","0x07":"0x4a6f6e6573"}
+
+You'll note that the strings we sent to the contract have been returned as hex code, so lets grab one of those key value pairs and convert it back to ASCII using web3.toAscii:
+
+<pre class="CodeBlock"><code>web3.eth.storageAt(contractAddress).then(function(result) {
+    document.getElementById('contractString').innerText = JSON.stringify(result);  
+	document.getElementById('favouritePython').innerText = web3.toAscii(result['0x03']);
+  });</code></pre>
+
+This completes our webpage. If you wish to play round with the other javascript bindings a complete list can be found <a href="https://github.com/ethereum/wiki/wiki/JavaScript-API">here</a>.
+
+Above we've gone through how the Javascript API allows you to pull information from the blockchain, and from your client, and how the watch functions allow your dapp front ends to react to changes on the blockchain. This is basically passive collection of information held on the blockchain - in the next tutorial on Javascript we will cover the basics of sending information to the blockchain using transactions.
+
+Edit 17/12/14: Minor changes to the web3.eth.watch explanation.
+	
+</body>
+</html>

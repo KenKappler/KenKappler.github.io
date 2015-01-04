@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Data structures</title>
+	<a href="../index.html">Back to Contents</a>
+</head>
+<body>
+	In this tutorial I am going to set out a relatively simple dapp whose purpose is to raise a certain amount of ether in a fixed period of time. It is intended to ape the behaviour of kickstarter or similar websites without charging a fee for it's use. I will be using it as an example to demonstrate how contracts handle ether, how they can send transactions themselves, and how they can register the passing of time.
+
+Most of you should be familiar with how a crowdfund project works - a proposer will describe to potential investors a project they are attempting to  secure funding for, set a goal amount they wish to raise, and a time limit in which they wish to raise it. The project is successful if the investors contribute enough within the alloted time to reach the goal - in this case the funding is transfered to the proposer from the crowdfunder. If unsuccessful in the alloted time, the investors receive a full refund from the crowdfunder.
+
+In our version of the crowdfunder we will use a contract where the contributions are made in ether, the goal for fund raising is also in ether, and the alloted time is measured in blocks. The contract will need to be able to handle multiple crowdfunded projects at a time, keep track of each contribution made, evaluate if the project was successful and payout either the proposer or the investors at the end of time limit.
+
+Full Credit goes to Vitalik Buterin whose contract we will be using as an example.
+
+Data Structuring
+
+When writing a contract the first thing to consider is what information will need to be stored in the contracts storage, and how that data will need to be structured. We can start with the projects information itself:
+
+Unique ID
+Recipient of funds
+Funding Goal
+Time Limit
+
+This four item list is sufficient information for us to define the terms of the campaign - we could feasibly add information about the project itself however this is probably best left in the front-end. Each project will have investors so we will need to store:
+
+Investor account
+Amount invested
+
+This will need to be stored in a 2 x n array where n is the number of investments made in the project. Finally each campaign will need to keep a record of the number of investments made and the total of all the contributions.
+
+Number of Investments
+Total Contributions
+
+In our previous example 'rainbow coin' we manually chose the storage slots used to keep our coin balances - we could do the same here and arrange the information in the contract storage as below:
+
+Project One	ID=1	Project Two	ID=2
+Key	Value	Key	Value
+contract.storage[ID * 2**128 + 0]	Proposer Account	contract.storage[ID * 2**128 + 0]	Proposer Account
+contract.storage[ID * 2**128 + 1]	Ether Raising Goal	contract.storage[ID * 2**128 + 1]	Ether Raising Goal
+contract.storage[ID * 2**128 + 2]	Project Time Limit	contract.storage[ID * 2**128 + 2]	Project Time Limit
+contract.storage[ID * 2**128 + 3]	Number Of Investors	contract.storage[ID * 2**128 + 3]	Number Of Investors
+contract.storage[ID * 2**128 + 4]	Total Contribution	contract.storage[ID * 2**128 + 4]	Total Contribution
+contract.storage[ID * 2**128 + 5]	Investor Account 1	contract.storage[ID * 2**128 + 5]	Investor Account 1
+contract.storage[ID * 2**128 + 6]	Amount Invested	contract.storage[ID * 2**128 + 6]	Amount Invested
+contract.storage[ID * 2**128 + 7]	Investor Account 2	contract.storage[ID * 2**128 + 7]	Investor Account 2
+contract.storage[ID * 2**128 + 8]	Amount Invested	contract.storage[ID * 2**128 + 8]	Amount Invested
+contract.storage[ID * 2**128 + 9]	Investor Account 3	contract.storage[ID * 2**128 + 9]	Investor Account 3
+...	...	...	...
+...	...	...	...
+
+Similar to the rainbow coin we have 'marked out' areas of the contract storage's key space and reserved them for each project - this time arbritrarily choosing spaces holding 2**128 for each campaign's ID.
+
+However..
+
+Serpent has a feature known as data structures. These are an abstraction of the methods we used previously - and are much easier to boot. Take a look at the below code:
+
+[code language='python']
+data campaigns[2^80](recipient, goal, deadline, contrib_total, contrib_count, contribs[2^50](sender, value))
+[/code]
+
+Here we have set up an array of structures called campaigns, each structure contains 6 members. 5 of them are simple data variables: recipient, goal, deadline, contrib_total, and contrib_count. The 6th - 'contribs' - is itself an array of structures which contains 2 members: sender and value.
+
+What we are doing here is defining grouping a list of variables to be stored in contracts storage, similar to the manual one we used previously. This allows us to access each of them using a named pointer. Each item in this data structure occupies a specific slot in storage and we can get & set using the dot operator:
+
+[code language='python']
+	self.campaigns[47].recipient = 0x56a87f87d6e589a665899f8 # Sets the recipient address for campaign 47
+	self.campaigns[47].contribs[55].value = 10000 # Sets the value of contribution 55 to 10000 and stores it in storage
+[/code]
+
+Each time you access a data structure you are in fact telling the vm to either read or write to storage in the same way we used self.storage[] before.
+
+For an understanding on how data structures map to the contract's storage please click here.
+
+We now have a simple way to store information in the contract between transactions.
+
+Designing our contract
+
+Next, we need to define what functions our contract will need to perform and what changes to the state of these will cause. Previously in our examples we have used just a single function as the only thing we needed to do was transfer coins from one account to another - Here we will need to define several functions. Looking at our definition of a crowdsource we can break it down into three types of operation triggered by three different kinds transactions.
+
+Proposer's transaction:
+
+This is the transaction sent by the proposer which creates the project - it includes the goal amount, the recipient account and the project time limit. These are all immutable until the time limit expires.
+
+Investors transactions:
+
+Transactions sent by investors include ether and the ID of the project being funded. The transaction is recorded as an investment in the storage space outlined above and the ether sent is added to the total contribution.
+
+Time-expired transaction:
+
+When the time has expired a transaction sent to the contract should trigger the end of the fundraising. A transaction is required to be sent to trigger this action as contracts do not run continuously on the blockchain and must be 'woken' in order for them to run. This transaction will result in the contract assessing whether the fundraising goal has been met and then either; Delivering the proceeds to the proposer, or, refunding the amounts sent by investors.
+
+Now for our code.
+
+Starting off with the code to handle the creation of new projects:
+
+[code language="Python"]
+data campaigns[2^80](recipient, goal, deadline, contrib_total, contrib_count, contribs[2^50](sender, value))
+
+def create_campaign(id, recipient, goal, timelimit):
+	if self.campaigns[id].recipient:
+		return(0)
+	self.campaigns[id].recipient = recipient
+	self.campaigns[id].goal = goal
+	self.campaigns[id].deadline = block.timestamp + timelimit
+[/code]
+
+Here we can see some minor differences between the function we defined in our coin example and this create_campaign function. Firstly this function has arguments which must be passed to it in order for it to function properly. Secondly we have stopped using the msg.data[] which returns 32 byte chunks of the data array which is passed to it when we send a transaction.
+
+Let's go through this code line by line and explain what is happening:
+
+Line 1: Here we declare the data structure as described above - this is done outside any function including init or shared.
+Line 3: Here we declare our first function 'create_campaign'. In the parentheses we include the arguments that will be used when we call it - in this case the id for the campaign, the recipients 160 bit address, the crowdfund goal in wei, and the timelimit of the campaign.
+Line 4-5: This our first conditional; If the ID (the first argument passed when we send a transaction to the function) is currently in use then self.campaigns[id].recipient will not be null, the boolean will return 'true' and the code will terminate (return(0)).
+Line 6: Assuming the ID is not taken and our first conditional evaluates to 'false' we can add the new campaign starting with the our address for the recipient. Note the use of the dot operator on the campaigns array.
+Line 7: Here we add the goal in wei - it is an integer as serpent doen't support decimals.
+Line 8: Here is a new function 'block.timestamp' which returns the approximate time the previous block was mined as the number of seconds that have passed since 1st of January 1970 (Unix time). By adding the timelimit submitted (also in seconds) we can store a deadline in this variable. (for more information on block.timestamp please see here)
+
+This sets up the campaign ready for investor contributions. To help you understand what this code accomplished let us look at an example:
+
+Our first customer Bob wants to setup a Crowdfund Campaign to raise 30,000 ether in 30 days for his Rare Snake Sanctuary, so he needs to send the following transaction to our contract:
+
+$0x00
+0
+0xc1481324871c4802b254bc2bfbeaa26373ba8393
+30*10**21
+2592000
+
+This would alter the state of the contract to the below:
+
+Bob's Rare Snake Sanctuary	ID=1
+Key								Value
+self.campaigns[1].recipients	0xc1481324871c4802b254bc2bfbeaa26373ba8393
+self.campaigns[1].goal 			30*10**21
+self.campaigns[1].deadline	 1414334510 + 2592000
+
+
+This actually maps to the contracts storage like so:
+self.storage[0 * (5 + 2 * 2^50) + 0] = 0x56ffad45adf88e9....
+self.storage[0 * (5 + 2 * 2^50) + 1] = 30*10**21
+self.storage[0 * (5 + 2 * 2^50) + 2] = 1414334510 + 2592000
+
+This sets up the campaign so that it is ready to start receiving contributions - we just need to add the code to handle them.
+
+[code language="Python"]
+def contribute(id):
+	# Update contribution total
+	total_contributed = self.campaigns[id].contrib_total + msg.value
+	self.campaigns[id].contrib_total = total_contributed
+
+	# Record new contribution
+	sub_index = self.campaigns[id].contrib_count
+	self.campaigns[id].contribs[sub_index].sender = msg.sender
+	self.campaigns[id].contribs[sub_index].value = msg.value
+	self.campaigns[id].contrib_count = sub_index + 1
+[/code]
+
+Our investor transaction code is pretty simple, an investor sends ether to the contract specifying a campaign id and the contribution details are added to the contract's storage and the total contribution amount is updated.
+
+Line 1: Defining the 'contribute' function. this has only one argument - the 'id' of the campiagn to be contributed to.
+Line 3-4: First we create a variable 'total_contributed' which we take as the value of the transaction (msg.value) added to the value stored in self.campaigns[id].contrib_total. Then we update the contrib_total variable.
+Line 7: Declaring a variable sub_index which is equal to the value of self.campaigns[id].contrib_count gives us the position in the contribs array for us to add a new contribution.
+Line 8-9: Here we store the contributors address (msg.sender) and the amount of ether sent with the transaction (msg.value). This will allow is to refund them their contribution if the campaign does not meet it's goals.
+Line 10: Finally we increase the count of self.campaigns[id].contrib_count by 1 as we have added a contribution.
+
+If the first contributor sends a transaction like the one below:
+
+Value = 5000 ether
+
+$0x01
+0
+
+This alters the state of the contract to the below:
+
+Bob's Rare Snake Sanctuary  ID=0
+Key  Value
+self.campaigns[0].recipients	0x56ffad45adf88e9....
+self.campaigns[0].goal	30*10**21
+self.campaigns[0].deadline  1414334510 + 2592000
+self.campaigns[0].contrib_total 5*10**21
+self.campaigns[0].contrib_count 1
+self.campaigns[0].contribs[0].sender	0x162739adf95d5e...
+self.campaigns[0].contribs[0].value  5*10**21
+
+
+This actually maps to the contracts storage like so:
+self.storage[0 * (5 + 2 * 2^50) + 0] = 0x56ffad45adf88e9....
+self.storage[0 * (5 + 2 * 2^50) + 1] = 30*10**21
+self.storage[0 * (5 + 2 * 2^50) + 2] = 1414334510 + 2592000
+self.storage[0 * (5 + 2 * 2^50) + 3] = 5*10**21
+self.storage[0 * (5 + 2 * 2^50) + 4] = 1
+self.storage[0 * (5 + 2 * 2^50) + 5 + (0 * 2)] = 0x162739adf95d5e...
+self.storage[0 * (5 + 2 * 2^50) + 6 + (0 * 2)] = 5*10**21
+...	...
+...	...
+The other to change to this contract is that it now holds the 5,000 ether in its account that was sent with the transaction.
+
+Further contributory transactions increase the 'total contribution' and the contracts ether balance, and their details are added to contract.storage.
+
+So now we have the mechanism for starting a project and for contributing to it - now we just need a way to end our campaign. In order to do this we are not going to add another function - instead we will append additional code to this function so that after a contribution has been added we can check if certain conditions have been met.
+
+The campaign ends when one of two things occurs - the time limit runs out, or the fundraising goal is reached. As I mentioned above, contracts do not have the ability to 'wake' themselves - you must always send them a transaction if you wish them to do anything.
+
+[code language='python']
+def contribute(id):
+	# Update contribution total
+	total_contributed = self.campaigns[id].contrib_total + msg.value
+	self.campaigns[id].contrib_total = total_contributed
+
+	# Record new contribution
+	sub_index = self.campaigns[id].contrib_count
+	self.campaigns[id].contribs[sub_index].sender = msg.sender
+	self.campaigns[id].contribs[sub_index].value = msg.value
+	self.campaigns[id].contrib_count = sub_index + 1
+
+	# Enough funding?
+	if total_contributed >= self.campaigns[id].goal:
+		send(self.campaigns[id].recipient, total_contributed)
+		self.clear(id)
+		return(1)
+
+	# Expired?
+	if block.timestamp > self.campaigns[id].deadline:
+		i = 0
+		c = self.campaigns[id].contrib_count
+		while i < c:
+			send(self.campaigns[id].contribs[i].sender, self.campaigns[id].contribs[i].value)
+			i += 1
+		self.clear(id)
+		return(2)
+[/code]
+
+This code consists of two conditionals, run sequentially, after the code for a contribution transaction has been run. The first 'if' ends the campaign if the fundraising goal is reached, the second 'if' ends the campaign if the time limit has been reached.
+
+Again we will go line by line:
+
+Line 13: After we have added a contribution this conditional checks to see if the total contributed is greater than the campaign's goal stored in self.campaigns. If it is the Campaign is successful and it will run the next three lines of code.
+
+Line 14: This line is our first introduction to the send(addr, value) function. When it is invoked in a contract it simply deducts the value from the contracts account and transfers it to the address' account. In this case because the goal has been reached it will have send the funds to the proposers address (stored in contract.storage[id]).
+
+Line 15: Here we call a yet to be defined function called 'clear' it's purpose will be to remove the campaign 'id' from the contracts storage. we pass it one variable - the id.
+
+Line 16: Finally we return(1) to advise the transaction sender that the goal has been met and the campaign finished.
+
+Line 19: This second conditional, which runs only if the first evaluates to false, compares the block.timestamp with the deadline defined when the contract was setup. If it evaluates true it means that the contract has fail
+
+Lines 18-22: Finally this while loop iterates through the list of contributors and their contributions, and generates transactions to send their ether back to them.
+Line 23: This return ends the code execution.
+
+You'll notice that both these conditionals call an undefined function "clear" this goes through the contracts storage and removes all information relating to this event:
+
+# Clearing function for internal use
+def clear(id):
+	if self == msg.sender:
+		self.campaigns[id].recipient = 0
+		self.campaigns[id].goal = 0
+		self.campaigns[id].deadline = 0
+		c = self.campaigns[id].contrib_count
+		self.campaigns[id].contrib_count = 0
+		self.campaigns[id].contrib_total = 0
+		i = 0
+		while i < c:
+			self.campaigns[id].contribs[i].sender = 0
+			self.campaigns[id].contribs[i].value = 0
+			i += 1
+
+You can probably see how this works by now. This function moves through all the campaign information and deletes it. before looping through the contributions and zeroing their values. The only thing of interest in this function is line 2:
+	if self == msg.sender:
+This conditional is new and simply checks that the function is being called by the contract itself, as opposed to another person or contract. You will see this often in contracts with multiple functions.
+
+So now we have all the functions of the crowdfunder defined we can put them together to create our full contract:
+[code language = 'python']
+
+data campaigns[2^80](recipient, goal, deadline, contrib_total, contrib_count, contribs[2^50](sender, value))
+
+def create_campaign(id, recipient, goal, timelimit):
+	if self.campaigns[id].recipient:
+		return(0)
+	self.campaigns[id].recipient = recipient
+	self.campaigns[id].goal = goal
+	self.campaigns[id].deadline = block.timestamp + timelimit
+
+def contribute(id):
+	# Update contribution total
+	total_contributed = self.campaigns[id].contrib_total + msg.value
+	self.campaigns[id].contrib_total = total_contributed
+
+	# Record new contribution
+	sub_index = self.campaigns[id].contrib_count
+	self.campaigns[id].contribs[sub_index].sender = msg.sender
+	self.campaigns[id].contribs[sub_index].value = msg.value
+	self.campaigns[id].contrib_count = sub_index + 1
+
+	# Enough funding?
+	if total_contributed >= self.campaigns[id].goal:
+		send(self.campaigns[id].recipient, total_contributed)
+		self.clear(id)
+		return(1)
+
+	# Expired?
+	if block.timestamp > self.campaigns[id].deadline:
+		i = 0
+		c = self.campaigns[id].contrib_count
+		while i < c:
+			send(self.campaigns[id].contribs[i].sender, self.campaigns[id].contribs[i].value)
+			i += 1
+		self.clear(id)
+		return(2)
+
+# Clearing function for internal use
+def clear(id):
+	if self == msg.sender:
+		self.campaigns[id].recipient = 0
+		self.campaigns[id].goal = 0
+		self.campaigns[id].deadline = 0
+		c = self.campaigns[id].contrib_count
+		self.campaigns[id].contrib_count = 0
+		self.campaigns[id].contrib_total = 0
+		i = 0
+		while i < c:
+			self.campaigns[id].contribs[i].sender = 0
+			self.campaigns[id].contribs[i].value = 0
+			i += 1
+
+[/code]
+
+This is our complete contract, use Alethzero to load it to the blockchain as we have done before. Now send a transaction to setup - you may wish to make yourself the recipient if you are using a private chain - and take a look at the change in the contracts state using the contract pane.
+
+
+
+
+	
+</body>
+</html>
