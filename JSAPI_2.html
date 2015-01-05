@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>JSAPI_1.html</title>
+	<a href="index.html">Back to Contents</a>
+	<script type="text/javascript">
+
+    //irrelevant as this is just an example of transact function - could be sent to anyone.
+    var contractAddress = "0xa210d663db4c0a6656eece3ebfee18734bbbd316";
+
+    // contractDesc the contract as having a single function with two input parameters, both unsigned integers 256
+    var contractDesc =  [{
+        "name": "Send",
+        "inputs": [
+        {
+            "name": "to",
+            "type": "uint256"
+        },
+        {
+            "name": "value",
+            "type": "uint256"
+        }
+        ]
+      }];
+    //Builds the contract using our contractDesc and nonsense address.
+    var contract = web3.contract(contractAddress, contractDesc);
+    //function to send transaction using parameters from the HTML input boxes
+    function dataTransaction() {
+      receiverAddress =  document.querySelector('#receiverAddress').value;
+      console.log(receiverAddress);
+      amount = document.querySelector('#amount').value;
+      console.log(amount);
+      contract.Send(receiverAddress, amount).transact()
+    }
+
+	</script>
+</head>
+<body>
+  <div>
+    <h3>Transact Example</h3>
+  </div>
+      <div>
+        <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+        <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+      </div>
+        <button onclick="dataTransaction();">Send transaction</button>
+      </div>
+  <div>
+  Typical transaction for a coin contract. Put an address prefixes with '0x' and hit 'Send transaction'
+  </div>
+</body>
+
+</html>
+	
+</body>
+</html>
