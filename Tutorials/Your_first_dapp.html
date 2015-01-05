@@ -76,7 +76,7 @@
 	<p>What's going on here? At the center of the screen is a browser window, a Webkit view to be exact. You can browse the existing web from there, just like any other browser, try google for example.</p>
 </div>
 <div>
-	<p>The rest of the panels contain debug and technical information that we'll make use of a bit later. While useful for developers, this is not a very-user friendly interface, so the final Ethereum browser, tentatively called 'Mist' and build on top of the Go Ethereum implementation, will have a completely different look and feel. In fact, it's likely that once Ethereum is launched, the etherbrowser will look a bit like this:</p>
+	<p>The rest of the panels contain debug and technical information that we'll make use of a bit later. While useful for developers, this is not a very-user friendly interface, so the final Ethereum browser, tentatively called 'Mist' and built on top of the Go Ethereum implementation, will have a completely different look and feel. In fact, it's likely that once Ethereum is launched, the etherbrowser will look a bit like this:</p>
 </div>
 
 
@@ -122,21 +122,19 @@
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender] = 10000
-def code():
-	to = msg.data[0]
+def code(to, value):
 	from = msg.sender
-	value = msg.data[1]
 	if self.storage[from] >= value:
 		self.storage[from] = self.storage[from]  - value
 		self.storage[to] = self.storage[to] + value</code></pre>
-	<div>
-		<p>Don't panic, it's much simpler than it looks. Contracts are divided into methods. The first method, entitled init, is a special method that defines the initial state of the contracts data storage. That initialisation code is run only once when the contract is created, and never again.</p>
-	</div>
-	<div>
-		<p>The second part of the contract is the contract code itself, the stuff that will live forever on the Ethereum network, immutable, and backed by millions of nodes insuring it returns the expected results every time. In our case, it's a simple function that checks that the sender has a large enough balance and, if so, transfers the tokens from one account to the other.</p>
-	</div>
+<div>
+	<p>Don't panic, it's much simpler than it looks. Contracts are divided into methods. The first method, entitled init, is a special method that defines the initial state of the contracts data storage. That initialisation code is run only once when the contract is created, and never again.</p>
+</div>
+<div>
+	<p>The second part of the contract is the contract code itself, the stuff that will live forever on the Ethereum network, immutable, and backed by millions of nodes insuring it returns the expected results every time. In our case, it's a simple function that checks that the sender has a large enough balance and, if so, transfers the tokens from one account to the other.</p>
+</div>
 
-Let's look at this in a bit more detail:
+<p>Let's look at this in a bit more detail:</p>
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender] = 10000</code></pre>
@@ -151,25 +149,23 @@ Let's look at this in a bit more detail:
 	<p>Now we have assigned ourselves an initial balance, let's have a look at the 'send' function, which will be executed each time we call the contract from now on. Note that because our contract in this particular case has only one function, we didn't bother naming the function send, it's assumed that every call to the contract will involve sending tokens.</p>
 </div>
 
-<pre class="CodeBlock"><code>def code():
-	to = msg.data[0]
+<pre class="CodeBlock"><code>def code(to, value):
 	from = msg.sender
-	value = msg.data[1]
 	if self.storage[from] >= value:
 		self.storage[from] = self.storage[from]  - value
 		self.storage[to] = self.storage[to] + value</code></pre>
-	
+
 <div>
-	<p>The first three lines are variable definitions: you probably noticed that this time the value of msg.sender is assigned to the variable from, which makes sense as the account calling the contract is the one that is sending tokens.</p>
+	<p>This function has two arguments passed to it by the transaction the variable 'to' is another 160 bit public address of the recipient. value is the second argument passed to our function and is the number of tokens you wish to send to the recipient.</p>
 </div>
 <div>
-	<p>The value msg.data[0] is assigned to the variable to and is another 160 bit public address. If you've ever written 'batch' programs, and you have a hunch this refers to the first argument that is sent to that contract, you'd be right. msg.data[0] represents the first argument sent to the contract, a bit like a the first parameter to a function call. Msg.data[1], as you probably guessed correctly, refers to the second argument and is the number of tokens you wish to send.</p>
+	<p>On the firts line you probably noticed that this time the value of msg.sender is assigned to the variable from, which makes sense as the account calling the contract is the one that is sending tokens.</p>
 </div>
 <div>
-	<p>So these are the three arguments passed to our function 'code' in order to transfer tokens from one storage address to another.</p>
+	<p>So the three arguments passed to our function 'code' in order to transfer tokens from one storage address to another are: msg.sender, 'to' and 'value'.</p>
 </div>
 <div>
-	<p>To send tokens, we first check that the value stored in self.storage[from] is higher or equal to the amount they are sending. This makes sense, you wouldn't want to send tokens that don't exist would you :) This is of course handled by the if statement: if self.storage[from] >= value:</p>
+	<p>On the second line the function has an 'if' conditional; To send tokens, we first check that the value stored in self.storage[from] is higher or equal to the amount they are sending. This makes sense, you wouldn't want to send tokens that don't exist would you :) This is handled by the if statement: if self.storage[from] >= value:</p>
 </div>
 <div>
 	<p>If the balance checks out, the conditional will evaluate to true and we subtract the amount being sent from the sender balance: self.storage[from] = self.storage[from]  - value, then add to the balance of the account receiving the tokens: self.storage[to] = self.storage[to] + value</p>
@@ -254,7 +250,7 @@ Let's look at this in a bit more detail:
 	<p>Now that your contract is compiled, you just have to press the 'Execute' to save your contract in the decentralized database.</p>
 </div>
 <div>
-	<p>Since you're not mining, it's likely your contract creation will be 'pending'. Make sure you have the 'Pending' pane opened and you will see something like this:</p>
+	<p>Since you're not mining, it's likely your contract creation will be 'pending'. Make sure you have the 'Pending' pane open and you will see something like this:</p>
 </div>
 
 <img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/bh/bgp3p2tluvwz.png" alt="" />
@@ -264,25 +260,34 @@ Let's look at this in a bit more detail:
 	<p>After pressing 'Execute' in the transact pane make a note of the 'creates' field for that particular transaction in the 'pending' pane, in this particular case, 'e1c8eea232d52995bd2202c12d42a28db80b2c44' (it will be different for you, as each contract created has a unique ID).</p>
 </div>
 <div>
-	<p>Now that you have a pending contract you will need to commit this to the blockchain by mining a block (On the real network anyone else mining will receive this transaction and attempt to mine a succesful block). Click mine and wait for the transaction to disappear from the pending pane and for a new entry to appear in the contract pane. Turn off mining and click into your new contract in the contract pane. You should see something like the below:</p>
+	<p>Now that you have a pending contract you will need to commit this to the blockchain by mining a block (On a live network anyone else mining will receive this transaction and attempt to mine a succesful block). Click mine and wait for the transaction to disappear from the pending pane and for a new entry to appear in the contract pane. Turn off mining and click into your new contract in the contract pane. You should see something like the below:</p>
 </div>
 
 <img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/48/u8tent7v1ort.png" alt="" />
 
 
 <div>
-	<p>You can see the entry in your contracts data storage from your initial setup showing a key value pair of your address and the number '10,000'. Everything looks good so we can assume that at the very least our 'init' function has been run correctly. Now we wish to test if we can send our tokens to another public key; In order to run our function 'code' we need to send a transaction to the contracts address with a 'to' address and a 'value' in the transactions data array. Locate the transact pane and paste the contracts address into the 'Address' box:</p>
+	<p>You can see the entry in your contracts data storage from your initial setup showing a key value pair of your address and the number '10,000'. Everything looks good so we can assume that at the very least our 'init' function has been run correctly. Now we wish to test if we can send our tokens to another public key; In order to run our function 'code' we need to send a transaction to the contracts address specifying a 'to' address, a 'value', and importantly: A function ID in the transactions data array. Locate the transact pane and paste the contracts address into the 'Address' box:</p>
 </div>
 
 <img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/1y/rqvl9srprk5u.png" alt="" />
 
 
 <div>
-	<p>Now in the area where we previously input our code we are going to put a to address and a value on seperate lines. Use 0x5cefa6b00f0b60d10ce3ba015bdbd2892bd9cb9c (my public address on the testnet :p) and any value lower than 10,000. Click Execute and you should once again see a transaction pending, hit 'mine' until you've generated a new block and then stop mining. Your contract should now look something like this:</p>
+	<p>Now in the area where we previously input our code we are going to put first the function id and a to address and a value on seperate lines. Use 0x5cefa6b00f0b60d10ce3ba015bdbd2892bd9cb9c (my public address on the testnet :p) and any value lower than 10,000. The data should look something like this:</p>
+
+	<div>
+	$0x00
+	0x5cefa6b00f0b60d10ce3ba015bdbd2892bd9cb9c
+	500
+	</div>
+
+
+
+	<p>Click Execute and you should once again see a transaction pending, hit 'mine' until you've generated a new block and then stop mining. Your contract should now look something like this:</p>
 </div>
 
 <img src="https://c3409409.ssl.cf0.rackcdn.com/ethereum.vanillaforums.com/editor/vb/bz6hiiyi15ac.png" alt="" />
-
 
 <div>
 	<p>Finally</p>

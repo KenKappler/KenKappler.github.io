@@ -6,40 +6,46 @@
 	<a href="../index.html">Back to Contents</a>
 </head>
 <body>
-	<p>In this tutorial I am going to set out a relatively simple dapp whose purpose is to raise a certain amount of ether in a fixed period of time. It is intended to ape the behaviour of kickstarter or similar websites without charging a fee for it's use. I will be using it as an example to demonstrate how contracts handle ether, how they can send transactions themselves, and how they can register the passing of time.</p>
+	<p>In this tutorial I am going to set out a relatively simple Dapp whose purpose is to raise a certain amount of ether in a fixed period of time. It is intended to ape the behaviour of kickstarter or similar websites without charging a fee for it's use. I will be using it as an example to demonstrate how contracts handle ether, how they can send transactions themselves, and how they can register the passing of time.</p>
 	<p>Most of you should be familiar with how a crowdfund project works - a proposer will describe to potential investors a project they are attempting to  secure funding for, set a goal amount they wish to raise, and a time limit in which they wish to raise it. The project is successful if the investors contribute enough within the alloted time to reach the goal - in this case the funding is transfered to the proposer from the crowdfunder. If unsuccessful in the alloted time, the investors receive a full refund from the crowdfunder.</p>
 	<p>In our version of the crowdfunder we will use a contract where the contributions are made in ether, the goal for fund raising is also in ether, and the alloted time is measured in blocks. The contract will need to be able to handle multiple crowdfunded projects at a time, keep track of each contribution made, evaluate if the project was successful and payout either the proposer or the investors at the end of time limit.</p>
 	<p>Full Credit goes to Vitalik Buterin whose contract we will be using as an example.</p>
-	<p>Data Structuring</p>
+	<h2>Data Structuring</h2>
 	<p>When writing a contract the first thing to consider is what information will need to be stored in the contracts storage, and how that data will need to be structured. We can start with the projects information itself:</p>
+	<p></p>
 	<p>Unique ID</p>
 	<p>Recipient of funds</p>
 	<p>Funding Goal</p>
 	<p>Time Limit</p>
+	<p></p>
 	<p>This four item list is sufficient information for us to define the terms of the campaign - we could feasibly add information about the project itself however this is probably best left in the front-end. Each project will have investors so we will need to store:</p>
+	<p></p>
 	<p>Investor account</p>
 	<p>Amount invested</p>
+	<p></p>
 	<p>This will need to be stored in a 2 x n array where n is the number of investments made in the project. Finally each campaign will need to keep a record of the number of investments made and the total of all the contributions.</p>
+	<p></p>
 	<p>Number of Investments</p>
 	<p>Total Contributions</p>
+	<p></p>
 	<p>In our previous example 'rainbow coin' we manually chose the storage slots used to keep our coin balances - we could do the same here and arrange the information in the contract storage as below:</p>
-
+	<p></p>
 <table>
 	<tbody>
-		<tr>Project One	ID=1	Project Two	ID=2</tr>
-		<tr>Key	Value	Key	Value</tr>
-		<tr>contract.storage[ID * 2**128 + 0]	Proposer Account	contract.storage[ID * 2**128 + 0]	Proposer Account</tr>
-		<tr>contract.storage[ID * 2**128 + 1]	Ether Raising Goal	contract.storage[ID * 2**128 + 1]	Ether Raising Goal</tr>
-		<tr>contract.storage[ID * 2**128 + 2]	Project Time Limit	contract.storage[ID * 2**128 + 2]	Project Time Limit</tr>
-		<tr>contract.storage[ID * 2**128 + 3]	Number Of Investors	contract.storage[ID * 2**128 + 3]	Number Of Investors</tr>
-		<tr>contract.storage[ID * 2**128 + 4]	Total Contribution	contract.storage[ID * 2**128 + 4]	Total Contribution</tr>
-		<tr>contract.storage[ID * 2**128 + 5]	Investor Account 1	contract.storage[ID * 2**128 + 5]	Investor Account 1</tr>
-		<tr>contract.storage[ID * 2**128 + 6]	Amount Invested	contract.storage[ID * 2**128 + 6]	Amount Invested</tr>
-		<tr>contract.storage[ID * 2**128 + 7]	Investor Account 2	contract.storage[ID * 2**128 + 7]	Investor Account 2</tr>
-		<tr>contract.storage[ID * 2**128 + 8]	Amount Invested	contract.storage[ID * 2**128 + 8]	Amount Invested</tr>
-		<tr>contract.storage[ID * 2**128 + 9]	Investor Account 3	contract.storage[ID * 2**128 + 9]	Investor Account 3</tr>
-		<tr>...	...	...	...</tr>
-		<tr>...	...	...	...</tr>
+		<tr><td>Project One</td>	<td>ID=1</td>	<td>Project Two</td>	<td>ID=2</td></tr>
+		<tr><td>Key</td>	<td>Value</td>	<td>Key</td>	<td>Value</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 0</td>	<td>Proposer Account</td>	<td>contract.storage[ID * 2**128 + 0</td>	<td>Proposer Account</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 1</td>	<td>Ether Raising Goal</td>	<td>contract.storage[ID * 2**128 + 1</td>	<td>Ether Raising Goal</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 2</td>	<td>Project Time Limit</td>	<td>contract.storage[ID * 2**128 + 2</td>	<td>Project Time Limit</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 3</td>	<td>Number Of Investors</td>	<td>contract.storage[ID * 2**128 + 3</td>	<td>Number Of Investors</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 4</td>	<td>Total Contribution</td>	<td>contract.storage[ID * 2**128 + 4</td>	<td>Total Contribution</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 5</td>	<td>Investor Account 1</td>	<td>contract.storage[ID * 2**128 + 5</td>	<td>Investor Account 1</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 6</td>	<td>Amount Invested</td>	<td>contract.storage[ID * 2**128 + 6</td>	<td>Amount Invested</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 7</td>	<td>Investor Account 2</td>	<td>contract.storage[ID * 2**128 + 7</td>	<td>Investor Account 2</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 8</td>	<td>Amount Invested</td>	<td>contract.storage[ID * 2**128 + 8</td>	<td>Amount Invested</td></tr>
+		<tr><td>contract.storage[ID * 2**128 + 9</td>	<td>Investor Account 3</td>	<td>contract.storage[ID * 2**128 + 9</td>	<td>Investor Account 3</td></tr>
+		<tr><td>...</td>	<td>...</td>	<td>...</td>	<td>...</td></tr>
+		<tr><td>...</td>	<td>...</td>	<td>...</td>	<td>...</td></tr>
 	</tbody>
 </table>
 
@@ -51,12 +57,12 @@
 data campaigns[2^80](recipient, goal, deadline, contrib_total, contrib_count, contribs[2^50](sender, value))
 [/code]
 
-<p>Here we have set up an array of structures called campaigns, each structure contains 6 members. 5 of them are simple data variables: recipient, goal, deadline, contrib_total, and contrib_count. The 6th - 'contribs' - is itself an array of structures which contains 2 members: sender and value.</p>
-<p>What we are doing here is defining grouping a list of variables to be stored in contracts storage, similar to the manual one we used previously. This allows us to access each of them using a named pointer. Each item in this data structure occupies a specific slot in storage and we can get & set using the dot operator:</p>
+<p>Here we have set up an array of structures called campaigns, each structure contains 6 members. 5 of them are simple data variables: recipient, goal, deadline, contrib_total, and contrib_count. The 6th - 'contribs' - is itself an array which contains 2 members: sender and value.</p>
+<p>What we are doing here is defining groupings of variables to be stored in contracts storage, similar to the manual one we used previously. This allows us to access each of them using a named pointer. Each item in this data structure occupies a specific slot in storage and we can get & set using the dot operator:</p>
 
 [code language='python']
 	self.campaigns[47].recipient = 0x56a87f87d6e589a665899f8 # Sets the recipient address for campaign 47
-	self.campaigns[47].contribs[55].value = 10000 # Sets the value of contribution 55 to 10000 and stores it in storage
+	self.campaigns[47].contribs[55].value = 10000 # In campaign 57 sets the value of contribution 55 to 10000 and stores it in storage
 [/code]
 
 <p>Each time you access a data structure you are in fact telling the vm to either read or write to storage in the same way we used self.storage[] before.</p>
