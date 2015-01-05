@@ -32,13 +32,12 @@
       amount = document.querySelector('#amount').value;
       console.log(amount);
       contract.Send(receiverAddress, amount).transact()
-    }
+    };
     web3.eth.watch({altered: web3.eth.number}).changed(function(){
     	web3.eth.storageAt(contractAddress).then(function(result) {
 			document.getElementById('balance').innerText = web3.toDecimal(result[coinbase]);
   		});
   	});
-});
 	</script>
 </head>
 <body>
