@@ -8,7 +8,7 @@
 
     //irrelevant as this is just an example of transact function - could be sent to anyone.
     var contractAddress = "0xa210d663db4c0a6656eece3ebfee18734bbbd316";
-    
+    coinbase = web3.eth.coinbase._result
     // contractDesc the contract as having a single function with two input parameters, both unsigned integers 256
     var contractDesc =  [{
         "name": "Send",
@@ -34,9 +34,8 @@
       contract.Send(receiverAddress, amount).transact()
     }
     web3.eth.watch({altered: web3.eth.number}).changed(function(){
-  		web3.eth.storageAt(contractAddress).then(function(result) {
-    		web3.eth.storageAt(contractAddress).then(function(result) {
-			document.getElementById('balance').innerText = web3.toDecimal(result[contractAddress]);
+    	web3.eth.storageAt(contractAddress).then(function(result) {
+			document.getElementById('balance').innerText = web3.toDecimal(result[coinbase]);
   		});
   	});
 });
