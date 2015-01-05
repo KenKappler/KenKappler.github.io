@@ -35,7 +35,7 @@
     };
     web3.eth.watch({altered: web3.eth.number}).changed(function(){
     	web3.eth.storageAt(contractAddress).then(function(result) {
-			document.getElementById('balance').innerText = web3.toDecimal(result[coinbase]);
+			document.getElementById('balance').innerText = web3.toDecimal(result[document.querySelector('#senderAddress').value;]);
   		});
   	});
 	</script>
@@ -44,15 +44,16 @@
   <div>
     <h3>Transact Example</h3>
   </div>
-  		<h2>Coin Balance: <strong id="balance"></strong></h2>
+  		<h4>Coin Balance: <strong id="balance"></strong></h4>
       <div>
+      	<input id="senderAddress" class="form-control" type="text" placeholder="Sender address"></input><br>
         <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
         <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
       </div>
         <button onclick="dataTransaction();">Send transaction</button>
       </div>
   <div>
-  Typical transaction for a coin contract. Put an address prefixes with '0x' and hit 'Send transaction'
+  Typical transaction for a coin contract. Put an address prefixed with '0x' and hit 'Send transaction'
   </div>
 </body>
 
