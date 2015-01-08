@@ -1,0 +1,10 @@
+def init():
+	self.storage[0] = msg.sender
+	self.storage[1] = block.number
+def deposit():
+	if msg.value > 0:
+		return(0)
+def withdraw(amount):
+	if msg.sender == self.storage[0] and self.balance >= amount and block.number >= self.storage[1] + 30000:
+		send(msg.sender, amount)
+		return(1)

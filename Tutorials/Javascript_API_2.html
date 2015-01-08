@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Javascript API part 2:</title>
+</head>
+<body>
+	In the previous tutorial we used some of the basic javascript functions available within the client to passively retreive information from the locally stored blockchain, in this tutorials we are going to examine the ways you can amend the blockchains state.
+
+	The only way it is possible to interact with the blockchain is by sending transactions, and there are three types of transaction which are important; Transactions which send value, transactions which create contracts, and transactions which send data to those contracts.
+
+	Once again I have created a html template, with space for you to fill in the required javascript:
+
+	Copy paste into a html file and save it somewhere in your workspace and open it up in Alethzero. You should see something like this:
+
+	This form is setup for the three types of transactions listed above, and we are going to add the code which will allow it to work piece by piece.
+
+	The Javascript function we will be using throughout is web3.eth.transact() this function takes a JSON object as its argument and the JSON object has many possible parameters.
+
+	The only two parameters we need to concern ourselves with in our first transaction is are "to" and "value" which are the recipient address and the amount of ether we wish to send (this is calculated in its base unit 'wei'). Transact is asynchronous and returns a promise (the point of which I will explain later)
+
+	web3.eth.transact({to:,value:})
+
+
+
+</body>
+</html>

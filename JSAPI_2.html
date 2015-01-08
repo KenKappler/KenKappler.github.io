@@ -1,63 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>JSAPI_1.html</title>
-	<a href="index.html">Back to Contents</a>
-	<script type="text/javascript">
-
-    //irrelevant as this is just an example of transact function - could be sent to anyone.
-    var contractAddress = "0xa210d663db4c0a6656eece3ebfee18734bbbd316";
-    var coinbase = web3.eth.coinbase._result;
-    // contractDesc the contract as having a single function with two input parameters, both unsigned integers 256
-    var contractDesc =  [{
-        "name": "Send",
-        "inputs": [
-        {
-            "name": "to",
-            "type": "uint256"
-        },
-        {
-            "name": "value",
-            "type": "uint256"
-        }
-        ]
-      }];
-    //Builds the contract using our contractDesc and nonsense address.
-    var contract = web3.contract(contractAddress, contractDesc);
-    //function to send transaction using parameters from the HTML input boxes
-    function dataTransaction() {
-      receiverAddress =  document.querySelector('#receiverAddress').value;
-      console.log(receiverAddress);
-      amount = document.querySelector('#amount').value;
-      console.log(amount);
-      contract.Send(receiverAddress, amount).transact()
-    };
-    web3.eth.watch({altered: web3.eth.number}).changed(function(){
-    	web3.eth.storageAt(contractAddress).then(function(result) {
-			document.getElementById('balance').innerText = web3.toDecimal(result[document.querySelector('#senderAddress').value]);
-  		});
-  	});
-	</script>
-</head>
-<body>
-  <div>
-    <h3>Transact Example</h3>
-  </div>
-  		<h4>Coin Balance: <strong id="balance"></strong></h4>
-      <div>
-      	<input id="senderAddress" class="form-control" type="text" placeholder="Sender address"></input><br>
-        <input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
-        <input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
-      </div>
-        <button onclick="dataTransaction();">Send transaction</button>
-      </div>
-  <div>
-  Typical transaction for a coin contract. Put an address prefixed with '0x' and hit 'Send transaction'
-  </div>
-</body>
-
-</html>
-	
-</body>
+	<head>
+		<meta charset="UTF-8">
+		<title>JSAPI_1.html</title>
+		<a href="index.html">Back to Contents</a>
+		<script type="text/javascript">
+		//Serpent source Code
+		var serpentSource = "def init():\n" +
+				"	self.storage[msg.sender] = 10000\n" +
+			"def send(to, value):\n" +
+				"	from = msg.sender\n" +
+				"	if self.storage[from] >= value:\n" +
+					"		self.storage[from] = self.storage[from]  - value\n" +
+					"		self.storage[to] = self.storage[to] + value\n";
+		var soliditySource = "contract Coin {\n"+
+			"	mapping (address => uint) balances;\n" +
+			"	function Coin() {\n" +
+				"		balances[msg.sender] = 10000;\n" +
+			"	}\n" +
+			"	function send(address receiver, uint amount) {\n" +
+				"		if (balances[msg.sender] < amount) return;\n" +
+				"		balances[msg.sender] -= amount;\n" +
+				"		balances[receiver] += amount;\n" +
+			"	}\n" +
+		"}";
+		var contractDesc = [{
+			"name": "Send",
+			"inputs": [{
+				"name": "to",
+				"type": "uint256"
+			}, {
+				"name": "value",
+				"type": "uint256"
+			}]
+		}];
+		//var contract = web3.contract(contractAddress, contractDesc);
+		function sendEther () {
+			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value}).then(function(){});
+		}
+		function createSerpentContract() {
+			web3.eth.transact({code: web3.eth.serpent(serpentSource)}).then(function(address){
+				contract = web3.contract(address, contractDesc);
+				contractAddress = address;
+			});
+		};
+		function createSolidityContract() {
+			web3.eth.transact({code: web3.eth.solidity(soliditySource)}).then(function(address){
+				contract = web3.contract(address, contractDesc);
+				contractAddress = address;
+			});
+		};
+		//function to send transaction using parameters from the HTML input boxes
+		function dataTransaction() {
+			receiverAddress = document.querySelector('#receiverAddress').value;
+			console.log(receiverAddress);
+			amount = document.querySelector('#amount').value;
+			console.log(amount);
+			contract.Send(receiverAddress, amount).transact()
+		};
+		web3.eth.watch({
+			altered: web3.eth.number
+		}).changed(function() {
+			web3.eth.storageAt(contractAddress).then(function(result) {
+				document.getElementById('balance').innerText = web3.toDecimal(result[web3.eth.coinbase._result]);
+			});
+		});
+		</script>
+	</head>
+	<body>
+		<div>
+			<div>
+				<h3>Transact Example</h3>
+			</div>
+			<div>
+				<input id="recipient" type="text" placeholder="To">
+				<input id="value" type="text" placeholder="Value in Wei">
+			</div>
+			<div>
+				<button onclick="sendEther();">Send Ether</button>
+			</div>
+			<div>
+				<h3>Create a contract</h3>
+			</div>
+			<div>
+				<button onclick="createSerpentContract();">Create Serpent Coin Contract</button>
+				<button onclick="createSolidityContract();">Create Solidity Coin Contract</button>
+			</div>
+			<div>
+				<h3>Send some coins</h3>
+			</div>
+			<div>
+				<h4>Coin Balance: <strong id="balance"></strong></h4>
+			</div>
+			<div>
+				<input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+				<input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+			</div>
+			<button onclick="dataTransaction();">Send transaction</button>
+		</div>
+		<div>
+			Typical transaction for a coin contract. Put in addresses prefixed with '0x' and hit 'Send transaction'
+		</div>
+	</body>
 </html>
