@@ -1,0 +1,66 @@
+Build a rock, paper, scissors contract where two users submit their throw (sequentially) along with a deposit, and in the next round reveal their answers to one another(or forfeit their deposits). Winner takes both deposits.
+
+Hint 1: Create functions to start a game, submit a throw, reveal a throw, collect a deposit if 
+
+Hint 2: Throws are submitted hashed with a random salt only known to the thrower, in the second stage thrower reveal their throw and their salt.
+
+Hint 3: the contract should have a time limit so that failure to reveal your throw is counted as a loss.
+
+Create three voting contracts for binary choices (ie: vote for a or b):
+	First contract: Anyonce can vote - you vote using ether, Those who vote for the winning proposition receive a proportional share of the ether sent by those who backed the losing proposition.
+	Second contract: List of participants decided during initialization, voters have an initial weighting to their vote; each time you vote for a winning proposition your Weighting decreases.
+	Third contract: List of participants decided during initialization, voters have an initial weighting to their vote; each time you vote for a winning proposition your Weighting Increases.
+
+Hint 1: for the first contract look to the previously examined crowd funding contract for ideas.
+
+
+
+
+Build a contract which allows you to post text and timestamp it. For eternity.
+
+data userAccount[2^160](index,tweets[2^80])
+
+def code(first, second, third, fourth):
+	if first != 0:
+		self.userAccount[msg.sender].tweets[self.userAccount[msg.sender].index] = first
+		self.userAccount[msg.sender].index += 1
+		if second != 0:
+			self.userAccount[msg.sender].tweets[self.userAccount[msg.sender].index] = second
+			self.userAccount[msg.sender].index += 1
+			if third != 0:
+				self.userAccount[msg.sender].tweets[self.userAccount[msg.sender].index] = third
+				self.userAccount[msg.sender].index += 1
+				if fourth != 0:
+					self.userAccount[msg.sender].tweets[self.userAccount[msg.sender].index] = fourth
+					self.userAccount[msg.sender].index += 1
+
+
+data gameId[2^80](playerOne,playerTwo,depositOne,depositTwo,secretOne,secretTwo,throwOne, throwTwo, blockLimit)
+
+def newGame(Id):
+	gameId[Id].playerOne = msg.sender
+	gameId[Id].depositOne = msg.value
+	gameId[Id].Blocklimit = block.number + 1200
+
+def joinGame(Id):
+	gameId[Id].playerTwo = msg.sender
+	gameId[Id].depositTwo = msg.value
+
+def submitThrow(Id, Hash):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

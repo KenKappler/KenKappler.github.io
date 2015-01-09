@@ -6,85 +6,64 @@
 	<a href="../index.html">Back to Contents</a>
 </head>
 <body>
-	In this tutorial we are going to take what we learnt in the previous tutorial and build upon it to create a contract which can hold several different tokens - seven in all. In doing so we will learn about structuring a contracts data storage.
-
-The sub-currency is one of the simplest contract examples to learn - in a few lines of code you are able to produce a crypto-currency with all the functionality of an alt-coin imbued with the trust of ethereum's consensus and cryptographic security. We are going to take this and build on top of it - but first let us go through the previous example in a bit more detail.
-
-Once again we will be using a private chain to build on so first kill your blockchain, restart your client and select private chain from the debug menu.
-
- The original Sub-Currency
-
- The code for a sub-currency is below:
+	<p>In this tutorial we are going to take what we learnt in the previous tutorial and build upon it to create a contract which can hold several different tokens - seven in all. In doing so we will learn about structuring a contracts data storage.</p>
+	<p>The sub-currency is one of the simplest contract examples to learn - in a few lines of code you are able to produce a crypto-currency with all the functionality of an alt-coin imbued with the trust of ethereum's consensus and cryptographic security. We are going to take this and build on top of it - but first let us go through the previous example in a bit more detail.</p>
+	<p>Once again we will be using a private chain to build on so first kill your blockchain, restart your client and select private chain from the debug menu.</p>
+	<p>The original Sub-Currency</p>
+	<p>The code for a sub-currency is below:</p>
 
 
 <pre class="CodeBlock"><code>def init():
-  self.storage[msg.sender] = 10000
-def code():
-  to = msg.data[0]
-  from = msg.sender
-  value = msg.data[1]
-  if self.storage[from] >= value:
-    self.storage[from] = self.storage[from]  - value
-    self.storage[to] = self.storage[to] + value</code></pre>
+	self.storage[msg.sender] = 10000
+def code(to, value):
+	from = msg.sender
+	if self.storage[from] >= value:
+		self.storage[from] = self.storage[from]  - value
+		self.storage[to] = self.storage[to] + value</code></pre>
 
- Its operation is explained in detail in the previous tutorial but I will just briefly go over a few things again.
-
- The first method named ‘init’ is executed when you submit the contract to the blockchain, it is the area where you can set the initial state of the self.storage, and it is only run once. In this example it has created a tuple with a key equal to the contract-senders public address and a value of 10,000.
-
- The ‘code’ method executes whenever someone sends a transaction to the contract - in this case it allows the transaction sender to move coins from one account to another by modifying the state of self.storage in a limited way, if certain conditions are met:
+ <p>Its operation is explained in detail in the previous tutorial but I will just briefly go over a few things again.</p>
+ <p>The first method named ‘init’ is executed when you submit the contract to the blockchain, it is the area where you can set the initial state of the self.storage, and it is only run once. In this example it has created a tuple with a key equal to the contract-senders public address and a value of 10,000.</p>
+ <p>The ‘code’ method executes whenever someone sends a transaction to the contract - in this case it allows the transaction sender to move coins from one account to another by modifying the state of self.storage in a limited way, if certain conditions are met:</p>
 
 
 <pre class="CodeBlock"><code>if self.storage[from] >= value:
     self.storage[from] = self.storage[from]  - value
     self.storage[to] = self.storage[to] + value</code></pre>
 
- The first line checks if the senders address is a key in self.storage, and if the value in that tuple is greater than or equal to the value specified in the senders transaction. If it evaluates ‘true’ then the next two lines of the code will make changes to the self.storage[from] tuple and the self.storage[to] tuple.
-
- This is a common operation in code execution - when a transaction is received the contract will perform a series of conditional operations on the information provided by the transaction and decide if/how the state should be modified.
-
- Typical transactions include the following fields: msg.sender, msg.value, a function id, multiple arguments, Gas, and Gas price. Msg.sender and Msg.value are the public address associated with the private key of the sender and the value of ether sent in the transaction respectively. This makes them very important fields for dapp developers as they allow them to write contracts which can: verify who a sender is, and verify a certain amount of ether has been included in the transaction. This is confirmed by the ethereum network ‘under the hood’ and you can trust the information in these fields to have been ‘proven’ by the network.
-
- Arguments are passed to function in a 32 byte array which is sent along with the transaction. As opposed to msg.sender or msg.value - the transaction sender can put anything they want in there - so in general every operation to alter a contracts.storage should involve at least a conditional check on the values in either the msg.sender or the msg.value fields.
-
- As I mentioned, if the conditional statement in the above code is true then the self.storage can be modified. self.storage is a key-value tuple with 256 bit length. This means the maximum number of possible keys is 2^256 (~~ 0.0012 × the number of atoms in the visible universe!), more space than could ever possibly be filled by humanity. In the example sub-currency contract, account addresses are used as keys to store the number of coins held by account holders. Accounts addresses are strings 160 bits in length; As 2^160 <<< 2^256 you can see that our sub-currency example only uses a fraction of the possible keys of self.storage.
-
-A contract writer must make sure that their contract is written in such a way to ensure that transactions can only alter the state of the contract in the way they are intended. Take a look at the below modification of our sub-currency:
+ <p>The first line checks if the senders address is a key in self.storage, and if the value in that tuple is greater than or equal to the value specified in the senders transaction. If it evaluates ‘true’ then the next two lines of the code will make changes to the self.storage[from] tuple and the self.storage[to] tuple.</p>
+ <p>This is a common operation in code execution - when a transaction is received the contract will perform a series of conditional operations on the information provided by the transaction and decide if/how the state should be modified.</p>
+ <p>Typical transactions include the following fields: msg.sender, msg.value, a function id, multiple arguments, Gas, and Gas price. Msg.sender and Msg.value are the public address associated with the private key of the sender and the value of ether sent in the transaction respectively. This makes them very important fields for dapp developers as they allow them to write contracts which can: verify who a sender is, and verify a certain amount of ether has been included in the transaction. This is confirmed by the ethereum network ‘under the hood’ and you can trust the information in these fields to have been ‘proven’ by the network.</p>
+ <p>Arguments are passed to function in a 32 byte array which is sent along with the transaction. As opposed to msg.sender or msg.value - the transaction sender can put anything they want in there - so in general every operation to alter a contracts.storage should involve at least a conditional check on the values in either the msg.sender or the msg.value fields.</p>
+ <p>As I mentioned, if the conditional statement in the above code is true then the self.storage can be modified. self.storage is a key-value tuple with 256 bit length. This means the maximum number of possible keys is 2^256 (~~ 0.0012 × the number of atoms in the visible universe!), more space than could ever possibly be filled by humanity. In the example sub-currency contract, account addresses are used as keys to store the number of coins held by account holders. Accounts addresses are strings 160 bits in length; As 2^160 <<< 2^256 you can see that our sub-currency example only uses a fraction of the possible keys of self.storage.</p>
+ <p>A contract writer must make sure that their contract is written in such a way to ensure that transactions can only alter the state of the contract in the way they are intended. Take a look at the below modification of our sub-currency:</p>
 
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender] = 10000
 	self.storage[2**161] = “Ken Coin”
-def code():
-	to = msg.data[0]
+def code(to, value):
 	from = msg.sender
-	value = msg.data[1]
 	if self.storage[from] >= value:
-		self.storage[from] = self.storage[from] - value
+		self.storage[from] = self.storage[from]  - value
 		self.storage[to] = self.storage[to] + value</code></pre>
 
-I have decided to add a small metadata tag to my contract with the string “Ken’s Coin” at self.storage[2**161], which is not a valid public key - this is a pretty innocuous change but it introduces a problem; The only conditional in our contract is that the self.storage[msg.sender] is greater than or equal to msg.data[1]. If that conditional is met the transaction sender can change the value of any key value pair he specifies by sending coins to it - this includes my metadata tag at self.storage[2^161], potentially allowing someone to vandalise my metadata tag by sending coins to it.
-
-In order to avoid problems like this it is important to tightly define where a transaction can and cannot alter a state:
+<p>I have decided to add a small metadata tag to my contract with the string “Ken’s Coin” at self.storage[2**161], which is not a valid public key - this is a pretty innocuous change but it introduces a problem; The only conditional in our contract is that the self.storage[msg.sender] is greater than or equal to msg.data[1]. If that conditional is met the transaction sender can change the value of any key value pair he specifies by sending coins to it - this includes my metadata tag at self.storage[2^161], potentially allowing someone to vandalise my metadata tag by sending coins to it.</p>
+<p>In order to avoid problems like this it is important to tightly define where a transaction can and cannot alter a state:</p>
 
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender] = 10000
 	self.storage[2**161] = “Ken Coin”
-def code():
-	to = msg.data[0]
+def code(to, value):
 	from = msg.sender
-	value = msg.data[1]
 	if self.storage[from] >= value and to <= 2**160:
-		self.storage[from] = self.storage[from] - value
+		self.storage[from] = self.storage[from]  - value
 		self.storage[to] = self.storage[to] + value</code></pre>
 
-This amendment keeps transactions from altering self.storage with keys greater than or equal to 2^160 - which is the max length of valid addresses. It is important that you ‘ringfence’ certain key values in self.storage to avoid accidental or intentional collisions as you add more data. self.storage has more than enough available keys to allow you to do this.
-
- Building a table from self.storage
-
- You can think of the subcurrency example above as using the contracts data storage as a spreadsheet with one column and 2^160 rows - most of them empty. Whenever a transaction moves coins from one account to another we find the row equal to the account number and change the value in the cell next to it.
-
-Now imagine you wish to add an extra column or columns to your spreadsheet - perhaps you want to add a name to each account. This might seem difficult using a dictionary like self.storage - but in fact it is quite simple.
+T<p>his amendment keeps transactions from altering self.storage with keys greater than or equal to 2^160 - which is the max length of valid addresses. It is important that you ‘ringfence’ certain key values in self.storage to avoid accidental or intentional collisions as you add more data. self.storage has more than enough available keys to allow you to do this.</p>
+<p>Building a table from self.storage</p>
+<p>You can think of the subcurrency example above as using the contracts data storage as a spreadsheet with one column and 2^160 rows - most of them empty. Whenever a transaction moves coins from one account to another we find the row equal to the account number and change the value in the cell next to it.</p>
+<p>Now imagine you wish to add an extra column or columns to your spreadsheet - perhaps you want to add a name to each account. This might seem difficult using a dictionary like self.storage - but in fact it is quite simple.</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -92,16 +71,16 @@ Now imagine you wish to add an extra column or columns to your spreadsheet - per
 <tr><td>21ce9a2f8474a91268208862da395a6bf21f7784</td>	<td>500</td>	<td>“Ken”</td></tr>
 </tbody>
 </table>
- If we wanted to store the above information in the contracts storage we would run the following two operations: 
+ <p>If we wanted to store the above information in the contracts storage we would run the following two operations:</p> 
 
 
 <pre class="CodeBlock"><code>self.storage[21ce9a2f8474a91268208862da395a6bf21f7784] = 500</code></pre>
 
-This is exactly the same as the operation we have seen before in our subcurrency example above, however;
+<p>This is exactly the same as the operation we have seen before in our subcurrency example above, however;</p>
 
 <pre class="CodeBlock"><code>self.storage[2**160 + 21ce9a2f8474a91268208862da395a6bf21f7784] = “Ken”</code></pre>
 
-This is new - I have added the value 2**160 to the address to create a new key value pair storing my account name. 2**160 is the total number of possible rows in our table(remember the maximum length of an account is 160 bits) and by adding this to our address we have moved to an unused area of the self.storage to place our second column. If we wished to add a third column:
+<p>This is new - I have added the value 2**160 to the address to create a new key value pair storing my account name. 2**160 is the total number of possible rows in our table(remember the maximum length of an account is 160 bits) and by adding this to our address we have moved to an unused area of the self.storage to place our second column. If we wished to add a third column:</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -112,15 +91,11 @@ This is new - I have added the value 2**160 to the address to create a new key v
 
 <pre class="CodeBlock"><code>self.storage[2 x (2**160) + 21ce9a2f8474a91268208862da395a6bf21f7784] = “Red”</code></pre>
 
-This shifts the key by another 2**160 rows and assigns the value “Red” - this is how key values are calculated for cells - whenever you add a new column you offset the value by the number of rows in the array multiplied by the column number.
-
-If we think in terms of tables then the Key value for use in the self.storage can be defined by the formula below:
-
-Key = row number + (total number of rows x column number) + constant
-
-Where the ‘constant’ is a number used to choose where in the self.storage we wish to position the array (typically 0). This formula is used for both storing the array and for later recalling the information stored.
-
-The example below is a five by five array containing values:
+<p>This shifts the key by another 2**160 rows and assigns the value “Red” - this is how key values are calculated for cells - whenever you add a new column you offset the value by the number of rows in the array multiplied by the column number.</p>
+<p>If we think in terms of tables then the Key value for use in the self.storage can be defined by the formula below:</p>
+<p>Key = row number + (total number of rows x column number) + constant</p>
+<p>Where the ‘constant’ is a number used to choose where in the self.storage we wish to position the array (typically 0). This formula is used for both storing the array and for later recalling the information stored.</p>
+<p>The example below is a five by five array containing values:</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -132,21 +107,18 @@ The example below is a five by five array containing values:
 <tr><td>Row 4</td>	<td>22</td><td>	5</td><td>	3434</td><td>	53345</td><td>	5443</td></tr>
 </tbody>
 </table>
- Using the formula above we can calculate the keys for each cell and store the array in self.storage.
-
- The top left cell is in row 0 column zero and has the value 17, therefore:
-
- Key = 0 + (5 x 0) + 0 = 0
+ <p>Using the formula above we can calculate the keys for each cell and store the array in self.storage.</p>
+ <p>The top left cell is in row 0 column zero and has the value 17, therefore:</p>
+ <p>Key = 0 + (5 x 0) + 0 = 0</p>
 
 <pre class="CodeBlock"><code>self.storage[0] = 17</code></pre>
 
-Correspondingly the bottom right cell is in row 4 column 4 and has the value 5443, therefore:
-
-Key = 4 + (5 x 4) + 0 = 24
+<p>Correspondingly the bottom right cell is in row 4 column 4 and has the value 5443, therefore:</p>
+<p>Key = 4 + (5 x 4) + 0 = 24</p>
 
 <pre class="CodeBlock"><code>self.storage[24] =5443</code></pre>
 
-The full list of self.storage values calculated is below, try calculating one yourself:
+<p>The full list of self.storage values calculated is below, try calculating one yourself:</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -179,9 +151,8 @@ The full list of self.storage values calculated is below, try calculating one yo
 </tbody>
 </table>
 
- As you can see this 5 by 5 array occupies the first 25 entries in self.storage - if we wanted to add a further array (for example 3 by 3) we would use the same Key value formula for writing and reading to storage, but this time set the constant to 25 so as not to have key values which collide with our previous array:
-
- Key value = row number +(total number of rows x column number) + 25
+ <p>As you can see this 5 by 5 array occupies the first 25 entries in self.storage - if we wanted to add a further array (for example 3 by 3) we would use the same Key value formula for writing and reading to storage, but this time set the constant to 25 so as not to have key values which collide with our previous array:</p>
+ <p>Key value = row number +(total number of rows x column number) + 25</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -191,7 +162,7 @@ The full list of self.storage values calculated is below, try calculating one yo
 </tbody>
 </table>
 
-Is entered into  our self.storage as:
+<p>Is entered into  our self.storage as:</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -207,36 +178,26 @@ Is entered into  our self.storage as:
 </tbody>
 </table>
 
-Using this method it is possible to add as many arrays as you like as long as the total size of all the arrays does not exceed 2**256.
-
-It is important to note that the formula above is only one option for storing tabular information into self.storage - there are many equally good alternatives - this one however is rather simple to use and understand and is sufficient to build our new multi coin sub-currency contract.
-
-Rainbow-Coin contract
-
-This contract is similar to the subcurrency example except that it contains 7 different coins in one contract: Red, Orange, Yellow, Green, Blue, Indigo and Violet. These coins will be held in seperate accounts, within the self.storage.
-
-Starting with our original subcurrency example: 
+<p>Using this method it is possible to add as many arrays as you like as long as the total size of all the arrays does not exceed 2**256.</p>
+<p>It is important to note that the formula above is only one option for storing tabular information into self.storage - there are many equally good alternatives - this one however is rather simple to use and understand and is sufficient to build our new multi coin sub-currency contract.</p>
+<p>Rainbow-Coin contract</p>
+<p>This contract is similar to the subcurrency example except that it contains 7 different coins in one contract: Red, Orange, Yellow, Green, Blue, Indigo and Violet. These coins will be held in seperate accounts, within the self.storage.</p>
+<p>Starting with our original subcurrency example:</p>
 
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender] = 10000
-def code():
-	to = msg.data[0]
+def code(to, value):
 	from = msg.sender
-	value = msg.data[1]
 	if self.storage[from] >= value and to <= 2**160:
-		self.storage[from] = self.storage[from] - value
+		self.storage[from] = self.storage[from]  - value
 		self.storage[to] = self.storage[to] + value</code></pre>
 
-Firstly we want to initialise the contract with a certain number of coins under control of the msg.sender. We plan to store the number of coins in an array of size 2^160 x 7 inside self.storage.
-
-We use the formula from above:
-
-Key value = row number +(total number of rows x column number) +constant
-
-Where row number = account number, total number of rows = 2^160, column number = 0-6(representing the 7 colours), and the constant = 0.
-
-So our initial state of:
+<p>Firstly we want to initialise the contract with a certain number of coins under control of the msg.sender. We plan to store the number of coins in an array of size 2^160 x 7 inside self.storage.</p>
+<p>We use the formula from above:</p>
+<p>Key value = row number + (total number of rows x column number) +constant</p>
+<p>Where row number = account number, total number of rows = 2^160, column number = 0-6(representing the 7 colours), and the constant = 0.</p>
+<p>So our initial state of:</p>
 
 <table border="1" cellpadding="1" cellspacing="1" style="width: 500px;">
 <tbody>
@@ -245,7 +206,7 @@ So our initial state of:
 </tbody>
 </table>
 
- Should be:
+ <p>Should be:</p>
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender + (0 * 2**160)] = 10000 #Red
@@ -259,20 +220,16 @@ So our initial state of:
 
 
 
- We now have 10,000 coins of each colour in self.storage - next we need to specify the code which allows coins to be moved to other accounts:
+ <p>We now have 10,000 coins of each colour in self.storage - next we need to specify the code which allows coins to be moved to other accounts:</p>
 
-<pre class="CodeBlock"><code>def code():
-	to = msg.data[0]
+<pre class="CodeBlock"><code>def code(to, value, coin):
 	from = msg.sender
-	value = msg.data[1]
-	coin = msg.data[2]
 	if self.storage[from + (coin * 2**160)] >= value and to <= 2**160:
     	self.storage[from + (coin * 2**160)] = self.storage[from +(coin * 2**160)]  - value
     	self.storage[to + (coin * 2**160)] = self.storage[to+ (coin * 2**160)] + value</code></pre>
 
-The changes made should make sense if you have followed the previous section. Firstly we have a new variable from our transaction called “coin” this is a number between 0-6 which represents which colour coin the transaction is for. Our if statement uses this “coin” variable and msg.sender to read from the self.storage where the msg.sender’s coin balance is listed, and if it finds the sender has sufficient balance of that coin it transfers the value to the ‘to’ address’ balance.
-
-Try submitting the full contract to the ethereum network yourself:
+<p>The changes made should make sense if you have followed the previous section. Firstly we have a new variable from our transaction called “coin” this is a number between 0-6 which represents which colour coin the transaction is for. Our if statement uses this “coin” variable and msg.sender to read from the self.storage where the msg.sender’s coin balance is listed, and if it finds the sender has sufficient balance of that coin it transfers the value to the ‘to’ address’ balance.</p>
+<p>Try submitting the full contract to the ethereum network yourself:</p>
 
 <pre class="CodeBlock"><code>def init():
 	self.storage[msg.sender + (0 * 2**160)] = 10000 #Red
@@ -282,18 +239,13 @@ Try submitting the full contract to the ethereum network yourself:
 	self.storage[msg.sender + (4 * 2**160)] = 10000 #Blue
 	self.storage[msg.sender + (5 * 2**160)] = 10000 #Indigo
 	self.storage[msg.sender + (6 * 2**160)] = 10000 #Violet
-def code():
-	to = msg.data[0]
+def code(to, value, coin):
 	from = msg.sender
-	value = msg.data[1]
-	coin = msg.data[2]
 	if self.storage[from + (coin * 2**160)] >= value and to <= 2**160:
-		self.storage[from + (coin * 2**160)] = self.storage[from +(coin * 2**160)]  - value
-		self.storage[to + (coin * 2**160)] = self.storage[to+ (coin * 2**160)] + value</code></pre>
+    	self.storage[from + (coin * 2**160)] = self.storage[from +(coin * 2**160)]  - value
+    	self.storage[to + (coin * 2**160)] = self.storage[to+ (coin * 2**160)] + value</code></pre>
 
-If everything worked correctly your submitting address should now have 10,000 of each coin in the contract - you can check this manually in the contracts window of the Alethzero browser. In order to send coins between addresses you can either send a transaction to the contract in alethzero manually:
-
-
-And that is it! We now have multiple sub-currencies in one contract; a very simple demonstration of how to organise the storage of data inside contracts. If you have any questions or comments please leave a reply below and I will try and get back to you.
+<p>If everything worked correctly your submitting address should now have 10,000 of each coin in the contract - you can check this manually in the contracts window of the Alethzero browser. In order to send coins between addresses you can either send a transaction to the contract in alethzero manually:</p>
+<p>And that is it! We now have multiple sub-currencies in one contract; a very simple demonstration of how to organise the storage of data inside contracts. If you have any questions or comments please leave a reply below and I will try and get back to you.</p>
 </body>
 </html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Hackathon Coin</title>
+		<a href="index.html">Back to Contents</a>
+		<script type="text/javascript">
+		//Serpent source Code
+
+		var contractDesc = [{
+			"name": "Send",
+			"inputs": [{
+				"name": "to",
+				"type": "uint256"
+			}, {
+				"name": "value",
+				"type": "uint256"
+			}]
+		}];
+
+
+		var contractAddress = '0xbe2ceb7ea6b14f2b59d606796e588cc0c58dab47'
+		var contract = web3.contract(contractAddress, contractDesc);
+		
+		function dataTransaction() {
+			receiverAddress = document.querySelector('#receiverAddress').value;
+			console.log(receiverAddress);
+			amount = document.querySelector('#amount').value;
+			console.log(amount);
+			contract.Send(receiverAddress, amount).transact()
+		};
+		web3.eth.watch({
+			altered: web3.eth.number
+		}).changed(function() {
+			web3.eth.storageAt(contractAddress).then(function(result) {
+				document.getElementById('balance').innerText = web3.toDecimal(result[web3.eth.coinbase._result]);
+			});
+		});
+		</script>
+	</head>
+	<body>
+		<div>
+			<div>
+				<h3>Send some coins</h3>
+			</div>
+			<div>
+				<h4>Coin Balance: <strong id="balance"></strong></h4>
+			</div>
+			<div>
+				<input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+				<input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+			</div>
+			<button onclick="dataTransaction();">Send transaction</button>
+		</div>
+		<div>
+		
+		</div>
+	</body>
+</html>
