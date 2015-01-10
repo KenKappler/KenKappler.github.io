@@ -13,10 +13,19 @@ Create three voting contracts for binary choices (ie: vote for a or b):
 
 Hint 1: for the first contract look to the previously examined crowd funding contract for ideas.
 
-
-
-
 Build a contract which allows you to post text and timestamp it. For eternity.
+
+
+
+Build a rock, paper, scissors contract where two users submit their throw (sequentially) along with a deposit, and in the next round reveal their answers to one another(or forfeit their deposits). Winner takes both deposits.
+
+Hint 1: Create functions to start a game, submit a throw, reveal a throw, collect a deposit if 
+
+Hint 2: Throws are submitted hashed with a random salt only known to the thrower, in the second stage thrower reveal their throw and their salt.
+
+Hint 3: the contract should have a time limit so that failure to reveal your throw is counted as a loss.
+
+
 
 data userAccount[2^160](index,tweets[2^80])
 

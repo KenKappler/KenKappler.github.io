@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<h3>
+	<p>Build a contract which allows you to post text and timestamp it. For eternity.</p>
+	</h3>
+	<h3>
+	<p>Create three voting contracts for binary choices (ie: vote for a or b):</p>
+	</h3>
+	<p>	First contract: Anyonce can vote - you vote using ether, Those who vote for the winning proposition receive a proportional share of the ether sent by those who backed the losing proposition.</p>
+	<p>	Second contract: List of participants decided during initialization, voters have an initial weighting to their vote; each time you vote for a winning proposition your weighting decreases.</p>
+	<p>	Third contract: List of participants decided during initialization, voters have an initial weighting to their vote; each time you vote for a winning proposition your weighting increases.</p>
+	<p><strong>Hint 1</strong>: for the first contract look to the previously examined crowd funding contract for ideas.</p>
+	<h3>
+	<p>Build a rock, paper, scissors contract where two users submit their throw (sequentially) along with a deposit, and in the next round reveal their answers to one another(or forfeit their deposits). Winner takes both deposits.</p>
+	</h3>
+	<p><strong>Hint 1</strong>: Create functions to start a game, submit a throw, reveal a throw, collect a deposit if</p>
+	<p><strong>Hint 2</strong>: Throws are submitted hashed with a random salt only known to the thrower, in the second stage thrower reveal their throw and their salt.</p>
+	<p><strong>Hint 3</strong>: the contract should have a time limit so that failure to reveal your throw is counted as a loss.</p>
+</body>
+</html>
