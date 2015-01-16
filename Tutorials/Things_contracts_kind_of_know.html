@@ -5,14 +5,14 @@
 	<title>Things contracts kind of know</title>
 	<a href="../index.html">Back to Contents</a>
 </head>
-<body>
-	Thing's contract's kind of know
+<body>	
+	wE are going to examine what information a contract has access to, how it can pass that information
+
+	Contracts live on the block chain - it is their home. You can send them information from the oustide world via transactions and they will interact with it but this information is only as trustworthy as the source.
 	
-	Contracts live on the block chain - it is their home. You can send them information from the oustide world and they will interact with it but to a contract this information is not trustworthy.
+	Fortunately the consensus mechanism provided by the ethereum blockchain provides contracts with some information that they can trust - 
 	
-	Fortunately the consensus mechanism provided by the ethereum blockchain provides contracts with some information that they can trust.
-	
-	The following
+	The following commands:
 	
 	tx.origin - the sender of the transaction
 	tx.gas - gas remaining
@@ -28,5 +28,7 @@
 	block.difficulty - current block difficulty
 	block.number - current block number
 	block.gaslimit - current block gaslimit
+
+	All return information to the contract regarding the "current" state of the blockchain - and can be considered "truth" as long as you
 </body>
 </html>

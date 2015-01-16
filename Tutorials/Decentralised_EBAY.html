@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	decentralized Ebay
+	
+	In this tutorial we will discuss a few new ideas, namely calculating hashes in contracts and simple verification of activities outside the blockchain.
+	
+	Our tutorial starts with a scenario: Alice has a guitar for sale and Bob is looking to buy a guitar - right now Alice will likely list her guitar on ebay and bob will see it, bid for it and if he wins - send the payment along with the 
+	
+	data Auction[2^80](deadline, highestBid, highestBidder, recipient)
+	
+	def startAuction(id, timeLimit):
+		self.Auction[id].deadline = block.number + timeLimit
+		self.Auction[id].recipient = msg.sender
+	
+	def bid(id):
+		if self.Auction[id].highestBid + 1*10^18 <= msg.value and block.number < self.Auction[id].deadline:
+			send(self.Auction[id].highestBidder, self.Auction[id].highestBid)
+			self.Auction[id].highestBid = msg.value
+			self.Auction[id].highestBidder = msg.sender
+			return(1)
+		else:
+			send(msg.sender, msg.value)
+			return(0)
+	
+	def endAuction(id):
+		if block.number > self.Auction[id].deadline:
+			self.Auction[id].deadline = 0
+			self.Auction[id].recipient = 0
+			send(self.Auction[id].recipient, self.Auction[id].highestBid)
+			self.Auction[id].highestBid = 0
+			self.Auction[id].highestBidder = 0
+			return(1)
+	
+	This should look familiar to anyone who has completed the crowdfund contract - the contract is built to handle ether payments and deal with timelimits for the purpose of an auction.
+	
+	This is the simplest case - bidders send the maximum amount they wish to bid to the contract and once the time limit is up the seller can collect their winnings. However, In the case of Alice and Bob we have not included any protection for Bob to ensure that Alice actually delivers the Guitar. For this to happen the contract will need to act as an escrow account holding the ether as a third party until one of two things happen - Alice delivers the Guitar or a timelimit runs out.
+	
+	We will amend our contract so that when bidding Bob must also send the has of a random number known only to him. The contract will, once the acution ends, hold the ether until it receives a transaction from someone (presumably Alice or her Proxy) sends it the correct random number - At which point it sends the Ether to Alice. If the contract does not receive the Key within the alloted time the contract is voided and the ether is returned to Bob.
+	
+	How this would work in the real world is that Alice might hire a courier firm to deliver to Bob the Guitar - under instructions to only hand over the Guitar once Bob has given them the key which fulfils SHA256(key) = HASH. Once they have this key they may send a transaction to the blockchain themselves or have Alice do it, to release the ether.
+	
+	The new contract is here:
+	
+	data Auction[2^80](deadline, highestBid, highestBidder, highestHASH, recipient)
+	
+	def startAuction(id, timeLimit):
+		self.Auction[id].deadline = block.number + timeLimit
+		self.Auction[id].recipient = msg.sender
+	
+	def bid(id, hash):
+		if self.Auction[id].highestBid + 1*10^18 <= msg.value and block.number < self.Auction[id].deadline:
+			send(self.Auction[id].highestBidder, self.Auction[id].highestBid)
+			self.Auction[id].highestBid = msg.value
+			self.Auction[id].highestBidder = msg.sender
+			self.Auction[id].highestHASH = hash
+			return(1)
+		else:
+			send(msg.sender, msg.value)
+			return(0)
+	
+	def endAuction(id, key):
+		if block.number > self.Auction[id].deadline:
+			if sha3(key) == self.Auction[id].highestHASH:
+				self.Auction[id].deadline = 0
+				self.Auction[id].recipient = 0
+				self.auction[id].highestHASH = 0
+				send(self.Auction[id].recipient, self.Auction[id].highestBid)
+				self.Auction[id].highestBid = 0
+				self.Auction[id].highestBidder = 0
+				return(1)
+	
+	This concept of waiting for an event to occur before revealing a secret key is a powerful one - we will learn more about this in later tutorials. Another possible way of re
+	
+	0x49d03a195e239b52779866b33024210fc7dc66e9c2998975c0aa45c1702549d5
+	SHA
+	0xae1d270a3b5a89864b7076af168cd361760a5e413f4939c9f5d4abd3c6e10ce0
+</body>
+</html>
+
+
+

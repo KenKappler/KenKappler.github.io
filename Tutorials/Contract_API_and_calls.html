@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	The contracts we have designed so far have been relatively straight forward - the most complex thing we have asked them to do is send a transaction with ether to the contributors of a crowdfunder.
+	
+	In this tutorial we are going to introduce an API into our contracts so that we can pass information on the contracts state from one contract to another, on top of this we are going to create a class inside a contract that defines the functions of another contract in order to interact with them. 
+	
+	In past examples we have seen how the JS api can be used to examine the storage of a contract, and from this it should be clear that anyone in possesion of the full blockchain can can access not just a contracts storage - but all the states the blockchain has had, along with the transactions which changed the states. With this in mind you might be asking yourself why would you need to include functions in contracts, which do not change the state of the contracts storage but simply return information to the caller. The answer is that while we can view the contents of any contracts storage - contracts cannot view the content another contracts storage without making a call to that contract.
+	
+	With no ability to peek inside other contracts storage, we will need to add functions which return information on the contracts storage:
+	
+	def init():
+		self.storage[msg.sender] = 10000
+	def send(to, value):
+		from = msg.sender
+		if self.storage[from] >= value:
+			self.storage[from] = self.storage[from]  - value
+			self.storage[to] = self.storage[to] + value
+	def balance(address):
+		return(self.storage[address])
+	
+	This is our Coin contract which you will recall from before - however we have added an extra function 'balance'. This is a function that does not change the state - it simply returns the value in the contracts storage to the sender of the transaction.
+	
+	This is a handy snippet of code, you can see how it could be useful to include such a function in many of your contracts so that they can return storage information to contracts which call them - it might be useful to rename it:
+	
+	def stateAt(key):
+		return(self.storage[key])
+	
+	this is more generic - it is a fucntion which when passed a key returns the value associated with that key.
+	
+	So we have included in our contract a function which returns the value at a given key, how do we create a contract which sends transactions to other contracts? Previously we saw our crowdfund contract send ether to a specific address:
+	
+	
+		# Enough funding?
+		if total_contributed >= self.campaigns[id].goal:
+			send(self.campaigns[id].recipient, total_contributed)
+			self.clear(id)
+			return(1)
+	
+		# Expired?
+		if block.timestamp > self.campaigns[id].deadline:
+			i = 0
+			c = self.campaigns[id].contrib_count
+			while i < c:
+				send(self.campaigns[id].contribs[i].sender, self.campaigns[id].contribs[i].value)
+				i += 1
+			self.clear(id)
+			return(2)
+	
+	The send function we used has two parameters, address and value, this is fine for sending ether - but serpent handles sending transactions with data slightly differently. If you remember our previous tutorials when calling a function in a contract we send the arguments as 256 bit values prepended with the function ID which is 8 bits:
+	
+	$0x01
+	0xf13426788a9f876e98d9687f7987
+	
+	Serpent abstracts this for us by allowing us to create a class of contract with named functions using the extern keyword:
+	
+	extern coin: [send, balance]
+	
+	We can then send transactions by declaring a contract variable:
+	
+	myContract = "0x56788979a9f7d68adf86"
+	
+	and send a transaction:
+	
+	myContract.Send('0x567456adfdadffd', 500, as=coin)
+	
+	This calls the
+</body>
+</html>
+
