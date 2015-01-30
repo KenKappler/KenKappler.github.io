@@ -20,7 +20,7 @@
 			"	}\n" +
 			"	function send(address receiver, uint amount) {\n" +
 				"		if (balances[msg.sender] < amount) return;\n" +
-				"		balances[msg.sender] -= amount;\n" +
+				"		balances[msg.se	nder] -= amount;\n" +
 				"		balances[receiver] += amount;\n" +
 			"	}\n" +
 		"}";
@@ -29,6 +29,16 @@
 			"inputs": [{
 				"name": "to",
 				"type": "uint256"
+			}, {
+				"name": "value",
+				"type": "uint256"
+			}]
+		}];
+		var contractSolDesc = [{
+			"name": "Send",
+			"inputs": [{
+				"name": "to",
+				"type": "address"
 			}, {
 				"name": "value",
 				"type": "uint256"
@@ -46,7 +56,7 @@
 		};
 		function createSolidityContract() {
 			web3.eth.transact({code: web3.eth.solidity(soliditySource)}).then(function(address){
-				contract = web3.contract(address, contractDesc);
+				contract = web3.contract(address, contractSolDesc);
 				contractAddress = address;
 			});
 		};

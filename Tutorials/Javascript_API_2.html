@@ -19,7 +19,71 @@
 
 	The only two parameters we need to concern ourselves with in our first transaction is are "to" and "value" which are the recipient address and the amount of ether we wish to send (this is calculated in its base unit 'wei'). Transact is asynchronous and returns a promise (the point of which I will explain later)
 
-	web3.eth.transact({to:,value:})
+	copy the below into our html template and open the web page in Alethzero:
+
+	function sendEther () {
+			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value}).then(function(){});
+		}
+
+	It should be fairly easy to see how this works, the transact function is being passed a json object with parameters 'to' and 'value'  whose values are pulled from our form input. We could also include the parameters gas and gasprice, but these default to the total amount of ether available and the current mean price for gas on the network.
+
+	Copy and paste any address into the to box and as many wei as you wish to send in the amount (remember there are 10^18 wei in an ether). Hit transact. Hitting this button calls the function 'sendEther' and firstly instructs the client to send a transaction to the network, secondly it creates a promise which on completion of the transaction will return a result. What type of result will be returned is dependent on the to whom the transaction is sent. When you are simply sending ether to another user the promise will return(1). **CHECK THIS MAY HAVE CHANGED**
+
+	You should see a transaction appear in the 'pending' pane if this has worked correctly. make sure you mine a block to commit it to the chain and check the balances update correctly.
+
+	The next transaction we will perform is going to pass evm code, to the blockchain, without a specified recipient, in order to create a new contract.
+
+	Before we do this we need some evm code to pass to the transaction. Fortunately our javascript api is capable of compiling both serpent and solidity to byte code to be passed in an array firstly we will create two Javascipt objects containing code for our Solidity and serpent Coins:
+
+		var serpentSource = "def init():\n" +
+				"	self.storage[msg.sender] = 10000\n" +
+			"def send(to, value):\n" +
+				"	from = msg.sender\n" +
+				"	if self.storage[from] >= value:\n" +
+					"		self.storage[from] = self.storage[from]  - value\n" +
+					"		self.storage[to] = self.storage[to] + value\n";
+		var soliditySource = "contract Coin {\n"+
+			"	mapping (address => uint) balances;\n" +
+			"	function Coin() {\n" +
+				"		balances[msg.sender] = 10000;\n" +
+			"	}\n" +
+			"	function send(address receiver, uint amount) {\n" +
+				"		if (balances[msg.sender] < amount) return;\n" +
+				"		balances[msg.se	nder] -= amount;\n" +
+				"		balances[receiver] += amount;\n" +
+			"	}\n" +
+		"}";
+
+	We have come across this code before and previously uploaded it to the blockchain using alethzero's transact pane. This time we will compile it in the browser the commands for this are web3.eth.serpent and web3.eth.solidity. These are also Asynchronous and return promises which when fulfilled give the EVM bytecode in Hex.
+
+	You can try this now. Copy and paste the above into your html template. reload the page in AZ and then go to the javascript console and type:
+
+	web3.eth.serpent(serpentSource).then( function(result) {console.log(result)})
+
+	and
+
+	web3.eth.solidity(soliditySource).then( function(result) {console.log(result)})
+
+	These should return:
+
+	0x61271033556100488061001360003961005b5660003560001a6000811415610046576001356040526021356060523360805260605160805154121515610045576060516080515403608051556060516040515401604051555b5b505b6000f3
+
+	and:
+
+	0x60056011565b60948060326000396000f35b612710600033600160a060020a03166000526020526040600020819055505600600160008035811a81818114601057005b6022606060020a600135046015356028565b60006000f35b80600033600160a060020a031660005260205260406000205410604957604d565b6090565b80600033600160a060020a0316600052602052604060002090815403908190555080600083600160a060020a031660005260205260406000209081540190819055505b505056
+
+	respectively.
+
+	Now we have bytecode we can pass it as a paramenter in the transact function using the "code:" prefix like this:
+
+	web3.eth.transact({code: '0x61271033556100488061001360003961005b5660003560001a6000811415610046576001356040526021356060523360805260605160805154121515610045576060516080515403608051556060516040515401604051555b5b505b6000f3'})
+
+	This produces our serpent contract in the exact same way as inputting serpent into the transact pane.
+
+
+
+
+
 
 
 

@@ -74,7 +74,161 @@
 				self.Auction[id].highestBidder = 0
 				return(1)
 	
-	This concept of waiting for an event to occur before revealing a secret key is a powerful one - we will learn more about this in later tutorials. Another possible way of re
+	This concept of waiting for an event to occur before revealing a secret key is a powerful one - we will learn more about this in later tutorials. It is possible to build a similar contract where we use a message from Bob to release the funds in escrow to Alice - however this has the disadvantage of needing Bob to send the transaction.
+
+	Alice knows that she wants to courier the Guitar to the eventual winner so she adds a third party to the contract:
+
+	data Auction[2^80](deadline, highestBid, highestBidder, highestHASH, recipient, thirdParty, thirdPartyFee)
+	
+	def startAuction(id, timeLimit, thirdParty, thirdPartyFee):
+		self.Auction[id].deadline = block.number + timeLimit
+		self.Auction[id].recipient = msg.sender
+		self.Auction[id].thirdParty = thirdParty
+		self.Auction[id].thirdPartyFee = thirdPartyFee
+	
+	def bid(id, hash):
+		if self.Auction[id].highestBid + 1*10^18 <= msg.value and block.number < self.Auction[id].deadline:
+			send(self.Auction[id].highestBidder, self.Auction[id].highestBid)
+			self.Auction[id].highestBid = msg.value
+			self.Auction[id].highestBidder = msg.sender
+			self.Auction[id].highestHASH = hash
+			return(1)
+		else:
+			send(msg.sender, msg.value)
+			return(0)
+	
+	def endAuction(id, key):
+		if block.number > self.Auction[id].deadline:
+			if sha3(key) == self.Auction[id].highestHASH:
+				self.Auction[id].deadline = 0
+				self.Auction[id].recipient = 0
+				self.auction[id].highestHASH = 0
+				send(self.Auction[id].recipient, self.Auction[id].highestBid - thirdPartyFee)
+				send(self.Auction[id].thirdParty, self.Auction[id].thirdPartyFee)
+				self.Auction[id].highestBid = 0
+				self.Auction[id].highestBidder = 0
+				return(1)
+
+	This third party is a Courier service who receives it's fee from the contract the same way that Alice does - by retrieving the secret from Bob. It will only complete delivery when Bob hands over the correct secret key.
+
+	There remains one problem with our contract - what if Alice changes her mind and decides not to send her Guitar to Bob. Bob's money would currently be trapped for ever, so we need to setup the event with a time limit so that if Bob's secret is not revealed within this time limit, he can reclaim his ether.
+
+	data Auction[2^80](deadline, highestBid, highestBidder, highestHASH, recipient, thirdParty, thirdPartyFee, deliveryDeadline)
+	
+	def startAuction(id, timeLimit, thirdParty, thirdPartyFee, deliveryTimeLimit):
+		self.Auction[id].deadline = block.number + timeLimit
+		self.Auction[id].recipient = msg.sender
+		self.Auction[id].thirdParty = thirdParty
+		self.Auction[id].thirdPartyFee = thirdPartyFee
+		self.Auction[id].deliveryDeadline = block.number + timeLimit + deliveryTimeLimit
+	
+	def bid(id, hash):
+		if self.Auction[id].highestBid + 1*10^18 <= msg.value and block.number < self.Auction[id].deadline:
+			send(self.Auction[id].highestBidder, self.Auction[id].highestBid)
+			self.Auction[id].highestBid = msg.value
+			self.Auction[id].highestBidder = msg.sender
+			self.Auction[id].highestHASH = hash
+			return(1)
+		else:
+			send(msg.sender, msg.value)
+			return(0)
+	
+	def endAuction(id, key):
+		if block.number > self.Auction[id].deadline:
+			if sha3(key) == self.Auction[id].highestHASH:
+				send(self.Auction[id].recipient, self.Auction[id].highestBid - thirdPartyFee)
+				send(self.Auction[id].thirdParty, self.Auction[id].thirdPartyFee)
+				self.clean(id)
+				return(1)
+			else:
+				return(0)
+
+	def notDelivered(id):
+		if self.Auction[id].deliveryDeadline < block.number && msg.sender == self.Auction[id].highestBidder:
+			send(self.Auction[id].highestBidder, self.Auction[id].highestBid)
+			self.clean(id)
+			return(1)
+		else:
+			return(0)
+
+	def clean(id):
+		if self == msg.sender:
+			self.Auction[id].deadline = 0
+			self.Auction[id].recipient = 0
+			self.Auction[id].highestHASH = 0
+			self.Auction[id].thirdParty = 0
+			self.Auction[id].thirdPartyFee = 0
+			self.Auction[id].deliveryDeadline = 0
+			self.Auction[id].highestBid = 0
+			self.Auction[id].highestBidder = 0
+
+	So now we have a contract which is setup to handle real world transactions over time.
+
+	Now take a look at the below two contracts:
+
+	Contract 1:
+
+	data secret
+	data recipient
+
+	def init():
+		self.secret = 0xae1d270a3b5a89864b7076af168cd361760a5e413f4939c9f5d4abd3c6e10ce0
+		self.recipient = msg.sender
+
+	def Receive(key):
+		if sha3(key) = self.secret:
+			send(self.recipient, self.balance)
+	
+	Contract 2:	
+
+	data secret
+	data deliver
+
+	def init():
+		self.secret = 0xae1d270a3b5a89864b7076af168cd361760a5e413f4939c9f5d4abd3c6e10ce0
+		self.deliver = msg.sender
+
+	def send(key):
+		if sha3(key) = self.secret:
+			send(self.deliver, self.balance)
+
+
+	These two contracts appear to execute the same code, however they are subtly different. They are in fact designed so that Bob and Alice can exchange Ether with one another, it works like this:
+
+	Alice sends Contract 1 to the blockchain along with zero ether:
+
+	Contract 1:
+
+	data secret
+	data recipient
+
+	def init():
+		self.secret = 0xae1d270a3b5a89864b7076af168cd361760a5e413f4939c9f5d4abd3c6e10ce0
+		self.recipient = msg.sender # Alice's Address
+
+	def Receive(key):
+		if sha3(key) = self.secret:
+			send(self.recipient, self.balance)
+
+	Where self.secret is the hash of a secret value known only to Alice. Bob sees this contract on the blockchain and sends Contract 2 to the blockchain with zero ether - this also contains the secret known only to Alice. 
+
+	Contract 2:	
+
+	data secret
+	data recipient
+
+	def init():
+		self.secret = 0xae1d270a3b5a89864b7076af168cd361760a5e413f4939c9f5d4abd3c6e10ce0
+		self.recipient = msg.sender #Bob's address
+
+	def send(key):
+		if sha3(key) = self.secret:
+			send(self.recipient, self.balance)
+
+	Alice now sends 500 ether to Contract 2 and waits. Bob sees this and sends 500 ether to contract 1. Now because Alice is in possesion of the secret key she can send a transaction containing the key to contract 1, and have this contract send her the ether - In doing so she reveals her key which bob can then use in contract 2 to have the contract send him the ether.
+
+	You might be wondering why we would use such a convoluted method to transfer ether between two parties when it would be much easier to use a contract - it is however a very important technique as it does not require the contracts be on the same  blockchain. This method could quite easily be modified to allow the transfer of other crypto currencies on other chains.
+
 	
 	0x49d03a195e239b52779866b33024210fc7dc66e9c2998975c0aa45c1702549d5
 	SHA
