@@ -8,35 +8,24 @@
 
 <script type="text/javascript">
 
+var contractAddress = '0x30b2b267cae392dfe98d405e1f8d7aa4b2c4d542';
 ///First web.eth.watch Code
-web3.eth.watch({altered: web3.eth.coinbase}).changed(function(){
-  web3.eth.coinbase.then(function(result) {
-  document.getElementById('coinbase').innerText = result;
-  });
-  web3.eth.balanceAt(web3.eth.coinbase).then(function(result){
-    document.getElementById('balance').innerText = web3.toDecimal(result);
-    });
+web3.eth.watch('chain').changed(function(){
+  var coinbase = web3.eth.coinbase;
+  document.getElementById('coinbase').innerText = coinbase;
+  var balance = web3.eth.balanceAt(coinbase);
+  document.getElementById('balance').innerText = web3.toDecimal(balance);
+  var blockNumber = web3.eth.number;
+  document.getElementById('latestBlock').innerText = blockNumber;
+  var hash = web3.eth.block(blockNumber).hash;
+  document.getElementById('latestBlockHash').innerText = hash;
+  var timeStamp = web3.eth.block(blockNumber).timestamp;
+  document.getElementById('latestBlockTimestamp').innerText = Date(timeStamp);
+  var contractString = JSON.stringify(web3.eth.storageAt(contractAddress))
+  document.getElementById('contractString').innerText = contractString;
+  var storageObject = web3.eth.storageAt(contractAddress);
+  document.getElementById('fullName').innerText = web3.toAscii(storageObject['0x']) + ' ' + web3.toAscii(storageObject['0x01']);
 });
-  
-  var contractAddress = "0x52ae0988e11527678c3a75f89e487efffb101a6d";
-//function onload(){
-web3.eth.watch({altered: web3.eth.number}).changed(function(){
- web3.eth.storageAt(contractAddress).then(function(result) {
-   
-    document.getElementById('contractString').innerText = JSON.stringify(result);
-    document.getElementById('favouritePython').innerText = web3.toAscii(result['0x03']);
-  });
-  web3.eth.block(web3.eth.number).then(function(result){
-    document.getElementById('latestBlock').innerText = web3.eth.number._result;
-    document.getElementById('latestBlockHash').innerText = result.hash;
-    document.getElementById('latestBlockTimestamp').innerText = Date(result.timestamp);
-    
-  })
-});
-
-
-
-
 
 </script>
 
@@ -55,10 +44,31 @@ web3.eth.watch({altered: web3.eth.number}).changed(function(){
     <h5>Latest Block Timestamp: <strong id="latestBlockTimestamp"></strong></h5>
     <h5>Latest Block Hash: <strong id="latestBlockHash"></strong></h5>
     <h5>Contract String: <strong id="contractString"></strong></h5>
-    <h5>Favourite Python: <strong id="favouritePython"></strong></h5>
+    <h5>Full Name: <strong id="fullName"></strong></h5>
     <br>
   </div>
-  <div>
+
+  contract Me {
+  ///Hello
+  string32 first;
+  string32 last;
+  string32 twitter;
+  string32 nick;
+  address myAddress;
+  uint dateJoined;
+  function Me(){
+  first = 'Ken';
+  last = 'Kappler';
+  twitter = '@kapplerken';
+  nick ='BlueChain';
+  myAddress = msg.sender;
+  dateJoined = block.timestamp;
+  }
+  
+    
+}
+
+
 
 
 </body>

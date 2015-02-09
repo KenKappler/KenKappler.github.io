@@ -11,74 +11,206 @@
 
 	Once again I have created a html template, with space for you to fill in the required javascript:
 
-	Copy paste into a html file and save it somewhere in your workspace and open it up in Alethzero. You should see something like this:
+<pre class="CodeBlock"><code>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>JSAPI_1.html</title>
+		<a href="index.html">Back to Contents</a>
+		<script type="text/javascript">
+		
+		//contract source code
+
+		//contract abi object
+		
+		//function for a simple transaction to transfer ether
+		
+		//function to create a new contract from our source code
+		
+		//function to send transaction using attributes from the HTML input boxes
+		
+		</script>
+	</head>
+	<body>
+		<div>
+			<div>
+				<h3>Transact Example</h3>
+			</div>
+			<div>
+				<input id="recipient" type="text" placeholder="To">
+				<input id="value" type="text" placeholder="Value in Wei">
+			</div>
+			<div>
+				<button onclick="sendEther();">Send Ether</button>
+			</div>
+			<div>
+				<h3>Create a contract</h3>
+			</div>
+			<div>
+				<button onclick="createSolidityContract();">Create Solidity Coin Contract</button>
+			</div>
+			<div>
+				<h3>Send some coins</h3>
+			</div>
+			<div>
+				<input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
+				<input id="amount" class="form-control" type="text" placeholder="Amount"></input><br>
+			</div>
+			<button onclick="dataTransaction();">Send transaction</button>
+		</div>
+		<div>
+			Put in addresses prefixed with '0x' and hit 'Send transaction'
+		</div>
+	</body>
+</html>
+
+</code></pre>
+
+	Copy paste the above into a html file and save it somewhere in your workspace and open it up in Alethzero. You should see something like this:
 
 	This form is setup for the three types of transactions listed above, and we are going to add the code which will allow it to work piece by piece.
 
-	The Javascript function we will be using throughout is web3.eth.transact() this function takes a JSON object as its argument and the JSON object has many possible parameters.
+	The Javascript function we will be using throughout is web3.eth.transact() this function takes a JSON object as its argument and the JSON object has many possible attributes.
 
-	The only two parameters we need to concern ourselves with in our first transaction is are "to" and "value" which are the recipient address and the amount of ether we wish to send (this is calculated in its base unit 'wei'). Transact is asynchronous and returns a promise (the point of which I will explain later)
+	The only two attributes we need to concern ourselves with in our first transaction is are "to" and "value" which are the recipient address and the amount of ether we wish to send (this is calculated in its base unit 'wei'). Transact is an asynchronous function and it callback returns various pieces of information (the point of which I will explain later).
 
-	copy the below into our html template and open the web page in Alethzero:
+	Copy the below into our html template and open the web page in Alethzero:
 
-	function sendEther () {
-			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value}).then(function(){});
-		}
+	function sendEther() {
+			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value});
+		};
 
-	It should be fairly easy to see how this works, the transact function is being passed a json object with parameters 'to' and 'value'  whose values are pulled from our form input. We could also include the parameters gas and gasprice, but these default to the total amount of ether available and the current mean price for gas on the network.
+	It should be fairly easy to see how this works, the transact function is being passed a json object with attributes 'to' and 'value' whose values are pulled from our form input. We could also include the attributes gas and gasprice, but these default to the total amount of ether available and the current mean price for gas on the network.
 
-	Copy and paste any address into the to box and as many wei as you wish to send in the amount (remember there are 10^18 wei in an ether). Hit transact. Hitting this button calls the function 'sendEther' and firstly instructs the client to send a transaction to the network, secondly it creates a promise which on completion of the transaction will return a result. What type of result will be returned is dependent on the to whom the transaction is sent. When you are simply sending ether to another user the promise will return(1). **CHECK THIS MAY HAVE CHANGED**
+	Copy and paste any address into the to box and as many wei as you wish to send in the amount (remember there are 10^18 wei in an ether). Hit transact. Hitting this button calls the function 'sendEther' which instructs the client to send a transaction to the network. What value will be returned is dependent on whom the transaction is sent to. When you are simply sending ether to another user the promise will return(1). **CHECK THIS MAY HAVE CHANGED**
 
-	You should see a transaction appear in the 'pending' pane if this has worked correctly. make sure you mine a block to commit it to the chain and check the balances update correctly.
+	You should see a transaction appear in the 'pending' pane if this has worked correctly. Make sure you mine a block to commit it to the chain and check the balances update correctly.
 
 	The next transaction we will perform is going to pass evm code, to the blockchain, without a specified recipient, in order to create a new contract.
 
-	Before we do this we need some evm code to pass to the transaction. Fortunately our javascript api is capable of compiling both serpent and solidity to byte code to be passed in an array firstly we will create two Javascipt objects containing code for our Solidity and serpent Coins:
+	Before we do this we need some evm code to pass to the transaction. Fortunately our javascript api is capable of compiling solidity to byte code to be passed in an array. Firstly we will create a Javascipt object containing code for our Solidity metaCoin. Add this to your html page:
 
-		var serpentSource = "def init():\n" +
-				"	self.storage[msg.sender] = 10000\n" +
-			"def send(to, value):\n" +
-				"	from = msg.sender\n" +
-				"	if self.storage[from] >= value:\n" +
-					"		self.storage[from] = self.storage[from]  - value\n" +
-					"		self.storage[to] = self.storage[to] + value\n";
-		var soliditySource = "contract Coin {\n"+
+		var soliditySource = "contract metaCoin {\n"+
 			"	mapping (address => uint) balances;\n" +
-			"	function Coin() {\n" +
+			"	function metaCoin() {\n" +
 				"		balances[msg.sender] = 10000;\n" +
 			"	}\n" +
 			"	function send(address receiver, uint amount) {\n" +
 				"		if (balances[msg.sender] < amount) return;\n" +
-				"		balances[msg.se	nder] -= amount;\n" +
+				"		balances[msg.sender] -= amount;\n" +
 				"		balances[receiver] += amount;\n" +
 			"	}\n" +
 		"}";
 
-	We have come across this code before and previously uploaded it to the blockchain using alethzero's transact pane. This time we will compile it in the browser the commands for this are web3.eth.serpent and web3.eth.solidity. These are also Asynchronous and return promises which when fulfilled give the EVM bytecode in Hex.
+	We have come across this code before and previously uploaded it to the blockchain using alethzero's transact pane. This time we will first compile it in the browser and upload it as bytecode. The function for compiling from solidity is web3.eth.solidity() and when passed solidity code produces EVM bytecode.
 
-	You can try this now. Copy and paste the above into your html template. reload the page in AZ and then go to the javascript console and type:
+	You can try this now. Copy and paste the above into your html template. Reload the page in AZ and then go to the javascript console and type:
 
-	web3.eth.serpent(serpentSource).then( function(result) {console.log(result)})
+	web3.eth.solidity(soliditySource)
+	This should return:
 
-	and
-
-	web3.eth.solidity(soliditySource).then( function(result) {console.log(result)})
-
-	These should return:
-
-	0x61271033556100488061001360003961005b5660003560001a6000811415610046576001356040526021356060523360805260605160805154121515610045576060516080515403608051556060516040515401604051555b5b505b6000f3
-
-	and:
-
-	0x60056011565b60948060326000396000f35b612710600033600160a060020a03166000526020526040600020819055505600600160008035811a81818114601057005b6022606060020a600135046015356028565b60006000f35b80600033600160a060020a031660005260205260406000205410604957604d565b6090565b80600033600160a060020a0316600052602052604060002090815403908190555080600083600160a060020a031660005260205260406000209081540190819055505b505056
-
-	respectively.
+	"0x60056011565b60ae8060326000396000f35b612710600033600160a060020a0316600052602052604060002081905550560060e060020a6000350480637bb98a6814601e578063d0679d3414602a57005b6024603d565b60006000f35b60366004356024356042565b60006000f35b5b600081565b80600033600160a060020a0316600052602052604060002054106063576067565b60aa565b80600033600160a060020a0316600052602052604060002090815403908190555080600083600160a060020a031660005260205260406000209081540190819055505b505056"
 
 	Now we have bytecode we can pass it as a paramenter in the transact function using the "code:" prefix like this:
 
-	web3.eth.transact({code: '0x61271033556100488061001360003961005b5660003560001a6000811415610046576001356040526021356060523360805260605160805154121515610045576060516080515403608051556060516040515401604051555b5b505b6000f3'})
+	web3.eth.transact({code: '0x60056011565b60ae8060326000396000f35b612710600033600160a060020a0316600052602052604060002081905550560060e060020a6000350480637bb98a6814601e578063d0679d3414602a57005b6024603d565b60006000f35b60366004356024356042565b60006000f35b5b600081565b80600033600160a060020a0316600052602052604060002054106063576067565b60aa565b80600033600160a060020a0316600052602052604060002090815403908190555080600083600160a060020a031660005260205260406000209081540190819055505b505056'})
 
-	This produces our serpent contract in the exact same way as inputting serpent into the transact pane.
+	This uploads our contract to the blockchain in the exact same way as inputting solidity into the transact pane. The above would create a callback which would return the address of the contract created.
+
+	Copy and paste the below into your html document:
+
+	function createSolidityContract() {
+			web3.eth.transact({code: web3.eth.solidity(soliditySource)});
+			};
+
+	This allows us to create a contract with one click from the browser window.
+
+	In our previous examples we showed how it was possible to interact with contracts using the transact pane in alethzero by building a data array to pass to contracts. The javascript API abstracts this process and allows you to call functions directly by creating a model of the contracts functions within the browser.
+
+	Firstly we are going to model the contracts functions by defining an array of JSON objects corresponding to the functions our contract has. Each object represents a function of the contract and is made up of very specific attribute-value pairs. The first attribute is unsurprisingly 'name' and its value is case sensitive and must be of the format nameOfFunction(argumentType1, argumentType2,...) for our contract above it should look like this:
+
+	"name": "send(address,uint256)",
+
+	The Second attribute is 'type' inthis case a 'function' I will cover other types in a later tutorial:
+
+	"type": "function",
+
+	finally we need to define the inputs of the function as an array of objects (both of which have attributes 'name' and 'type'): 
+
+	"inputs": [
+			{
+				"name": "to",
+				"type": "address"
+			}, 
+			{
+				"name": "value",
+				"type": "uint256"
+			}
+			]
+
+	If our function returned a value we would also define "outputs" so that our javascript would know how to handle the data array passed back to the browser by the callback.
+
+	Putting this all together to create a javascript object describing our contract:
+
+	var contractDesc = [{
+			"name": "send(address,uint256)",
+			"type": "function",
+			"inputs": [
+			{
+				"name": "to",
+				"type": "address"
+			}, 
+			{
+				"name": "value",
+				"type": "uint256"
+			}
+			]
+		}];
+
+	Make careful note of the curly brackets indicating objects, and the square brackets indicating arrays. Now we have a description of our contracts function and the arguments it takes we can create a 'contract' object using web3.eth.contract() a function which takes two arguments, the first is the address of the contract as a 160bit hex string, the second is the contract description:
+
+		contract = web3.eth.contract(address, contractDesc);
+
+	Lets go back and amend our 'createSolidityContract()' function to also create this object:
+
+	var contractDesc = [{
+			"name": "send(address,uint256)",
+			"type": "function",
+			"inputs": [
+			{
+				"name": "to",
+				"type": "address"
+			}, 
+			{
+				"name": "value",
+				"type": "uint256"
+			}
+			]
+		}];
+	
+	...
+
+	function createSolidityContract() {
+		var address = web3.eth.transact({code: web3.eth.solidity(soliditySource)});
+		contract = web3.eth.contract(address, contractDesc);
+	};
+
+	Here we have made a couple of important changes, firstly we have declared a new variable 'address' which is the value returned by the transact function which creates our contract. Secondly we declare a new global object 'contract' which is created when we pass the contract description object along with our contracts address to the web3.eth.contract function.
+
+	With our new contract object we can easily interact with the contract on the blockchain simply by calling the functions we have defined above. For example:
+
+	contract.send('0x878965387afd76fd008e7668','500')
+
+	Will send a transaction instructing the contract to send 500 coins to the account '0x878965387afd76fd008e7668'. We can easily setup a JS function which takes these arguments from our html form and passes them to the contract:
+
+	function dataTransaction() {
+			var receiverAddress = document.querySelector('#receiverAddress').value;
+			var amount = document.querySelector('#amount').value;
+			contract.send(receiverAddress, amount);
+		};
+
+	This completes the tutorial on transactions, in the next JS api tutorial we will cover using 'accessor' functions, making calls to functions and sending other general commands to the client.
 
 
 

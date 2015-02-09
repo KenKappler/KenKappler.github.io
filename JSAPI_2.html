@@ -5,76 +5,50 @@
 		<title>JSAPI_1.html</title>
 		<a href="index.html">Back to Contents</a>
 		<script type="text/javascript">
-		//Serpent source Code
-		var serpentSource = "def init():\n" +
-				"	self.storage[msg.sender] = 10000\n" +
-			"def send(to, value):\n" +
-				"	from = msg.sender\n" +
-				"	if self.storage[from] >= value:\n" +
-					"		self.storage[from] = self.storage[from]  - value\n" +
-					"		self.storage[to] = self.storage[to] + value\n";
-		var soliditySource = "contract Coin {\n"+
+		
+		var soliditySource = "contract metaCoin {\n"+
 			"	mapping (address => uint) balances;\n" +
-			"	function Coin() {\n" +
+			"	function metaCoin() {\n" +
 				"		balances[msg.sender] = 10000;\n" +
 			"	}\n" +
 			"	function send(address receiver, uint amount) {\n" +
 				"		if (balances[msg.sender] < amount) return;\n" +
-				"		balances[msg.se	nder] -= amount;\n" +
+				"		balances[msg.sender] -= amount;\n" +
 				"		balances[receiver] += amount;\n" +
 			"	}\n" +
 		"}";
 		var contractDesc = [{
-			"name": "Send",
-			"inputs": [{
-				"name": "to",
-				"type": "uint256"
-			}, {
-				"name": "value",
-				"type": "uint256"
-			}]
-		}];
-		var contractSolDesc = [{
-			"name": "Send",
-			"inputs": [{
+			"name": "send(address,uint256)",
+			"type": "function",
+			"inputs": [
+			{
 				"name": "to",
 				"type": "address"
-			}, {
+			}, 
+			{
 				"name": "value",
 				"type": "uint256"
-			}]
+			}
+			]
 		}];
-		//var contract = web3.contract(contractAddress, contractDesc);
-		function sendEther () {
-			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value}).then(function(){});
-		}
-		function createSerpentContract() {
-			web3.eth.transact({code: web3.eth.serpent(serpentSource)}).then(function(address){
-				contract = web3.contract(address, contractDesc);
-				contractAddress = address;
-			});
+		
+		function sendEther() {
+			web3.eth.transact({to: document.querySelector('#recipient').value ,value: document.querySelector('#value').value});
 		};
+
 		function createSolidityContract() {
-			web3.eth.transact({code: web3.eth.solidity(soliditySource)}).then(function(address){
-				contract = web3.contract(address, contractSolDesc);
-				contractAddress = address;
-			});
-		};
+			var address = web3.eth.transact({code: web3.eth.solidity(soliditySource)});
+			contract = web3.eth.contract(address, contractDesc);
+			
+			};
+
+		
 		//function to send transaction using parameters from the HTML input boxes
 		function dataTransaction() {
-			receiverAddress = document.querySelector('#receiverAddress').value;
-			console.log(receiverAddress);
-			amount = document.querySelector('#amount').value;
-			console.log(amount);
-			contract.Send(receiverAddress, amount).transact()
+			var receiverAddress = document.querySelector('#receiverAddress').value;
+			var amount = document.querySelector('#amount').value;
+			contract.send(receiverAddress, amount);
 		};
-		web3.eth.watch({
-			altered: web3.eth.number
-		}).changed(function() {
-			web3.eth.storageAt(contractAddress).then(function(result) {
-				document.getElementById('balance').innerText = web3.toDecimal(result[web3.eth.coinbase._result]);
-			});
-		});
 		</script>
 	</head>
 	<body>
@@ -93,14 +67,10 @@
 				<h3>Create a contract</h3>
 			</div>
 			<div>
-				<button onclick="createSerpentContract();">Create Serpent Coin Contract</button>
 				<button onclick="createSolidityContract();">Create Solidity Coin Contract</button>
 			</div>
 			<div>
 				<h3>Send some coins</h3>
-			</div>
-			<div>
-				<h4>Coin Balance: <strong id="balance"></strong></h4>
 			</div>
 			<div>
 				<input id="receiverAddress" class="form-control" type="text" placeholder="Receiver address"></input><br>
@@ -109,7 +79,7 @@
 			<button onclick="dataTransaction();">Send transaction</button>
 		</div>
 		<div>
-			Typical transaction for a coin contract. Put in addresses prefixed with '0x' and hit 'Send transaction'
+			Put in addresses prefixed with '0x' and hit 'Send transaction'
 		</div>
 	</body>
 </html>

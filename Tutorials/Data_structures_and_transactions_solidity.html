@@ -1,0 +1,52 @@
+Solidity has several tools to for you to structure the storage of a contract as a relational databse model. In the previous contract you used a mapping to store value associated with an address
+
+In this tutorial we will cover the basic use of Structs, Arrays and mappings which abstract the creation of complex rules for storing information.
+
+Firstly structs may be familiar to anyone who has used C type language before - essentially they are physical grouping of variables, stored under one reference:
+
+struct coinWallet {
+    uint redCoin;
+    uint greenCoin;
+  }
+
+This defines a 'type' of struct but does not initialize an instance of it - this means that defining the struct doesnt write anything to the contracts storage, in order to do this we have to declare an instance of the struct *and* then assign values to its associcated variable:
+
+coinWallet myWallet;
+myWallet.redCoin = 500
+myWallet.greenCoin = 250
+
+this writes to storage addresses 0 and 1 respectively
+
+contract Test{
+	struct coinWallet {
+    	uint redCoin;
+    	uint greenCoin;
+    }
+	function Test(){
+		coinWallet myWallet;
+		myWallet.redCoin = 500;
+		myWallet.greenCoin = 250;
+	}
+}
+
+
+
+contract Coin {
+	address minter;
+	mapping (address => uint) balances;
+	function Coin() {
+		minter = msg.sender;
+	}
+	function mint(address owner, uint amount) {
+		if (msg.sender != minter) return;
+		balances[owner] += amount;
+	}
+	function send(address receiver, uint amount) {
+		if (balances[msg.sender] < amount) return;
+		balances[msg.sender] -= amount;
+		balances[receiver] += amount;
+	}
+	function queryBalance(address addr) constant returns (uint balance) {
+		return balances[addr];
+	}
+}
